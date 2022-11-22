@@ -253,15 +253,16 @@ class OrderLines
 
             if (!empty($orderLines) && !empty($maatoSyncInsertData)) {
                 $result = $this->adapter->makeRequest('orderLines/batch/new', $orderLines, 'POST');
-                $maatoSyncInsertData = $this->helper->setMaatooIdToInsertArray($maatoSyncInsertData, $result['orderLines']);
-                if (is_callable($cl)) {
-                    $cl(
-                        'Added items to orders from # ' . reset($updatedOrderItems) .
-                        ' to #' . end($updatedOrderItems)
-                    );
+                if (isset($result['orderLines'])) {
+                    $maatoSyncInsertData = $this->helper->setMaatooIdToInsertArray($maatoSyncInsertData, $result['orderLines']);
+                    if (is_callable($cl)) {
+                        $cl(
+                            'Added items to orders from # '.reset($updatedOrderItems).
+                            ' to #'.end($updatedOrderItems)
+                        );
+                    }
+                    $this->helper->executeInsertOnDuplicate($maatoSyncInsertData);
                 }
-
-                $this->helper->executeInsertOnDuplicate($maatoSyncInsertData);
             }
 
             // Delete entity
