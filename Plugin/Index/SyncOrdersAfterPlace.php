@@ -24,57 +24,57 @@ class SyncOrdersAfterPlace
     /**
      * @var CartRepositoryInterface
      */
-    private CartRepositoryInterface $cartRepository;
+    private $cartRepository;
 
     /**
      * @var StoreManagerInterface
      */
-    private StoreManagerInterface $storeManager;
+    private $storeManager;
 
     /**
      * @var StoreConfigManager $storeConfigManager
      */
-    private StoreConfigManager $storeConfigManager;
+    private $storeConfigManager;
 
     /**
      * @var SyncRepository
      */
-    private SyncRepository $syncRepository;
+    private $syncRepository;
 
     /**
      * @var Conversion
      */
-    private Conversion $conversionResource;
+    private $conversionResource;
 
     /**
      * @var ConversionFactory
      */
-    private ConversionFactory $conversionFactory;
+    private $conversionFactory;
 
     /**
      * @var Serialize
      */
-    private Serialize $serialize;
+    private $serialize;
 
     /**
      * @var Config
      */
-    private Config $config;
+    private $config;
 
     /**
      * @var AdapterInterface
      */
-    private AdapterInterface $adapter;
+    private $adapter;
 
     /**
      * @var LoggerInterface
      */
-    private LoggerInterface $logger;
+    private $logger;
 
     /**
      * @var Order
      */
-    private Order $order;
+    private $order;
 
     /**
      * Construct
