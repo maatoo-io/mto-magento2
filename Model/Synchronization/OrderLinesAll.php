@@ -10,6 +10,7 @@ use Maatoo\Maatoo\Model\StoreConfigManager;
 use Maatoo\Maatoo\Model\StoreMap;
 use Maatoo\Maatoo\Model\SyncRepository;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class OrderLinesAll
@@ -49,12 +50,18 @@ class OrderLinesAll
     private $helper;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * @param  StoreConfigManager  $storeManager
      * @param  CollectionFactory  $collectionOrderFactory
      * @param  AdapterInterface  $adapter
      * @param  StoreMap  $storeMap
      * @param  SyncRepository  $syncRepository
      * @param  DataSync  $helper
+     * @param LoggerInterface $logger
      */
     public function __construct(
         StoreConfigManager $storeManager,
@@ -62,7 +69,8 @@ class OrderLinesAll
         AdapterInterface $adapter,
         StoreMap $storeMap,
         SyncRepository $syncRepository,
-        DataSync $helper
+        DataSync $helper,
+        LoggerInterface $logger
     ) {
         $this->storeManager = $storeManager;
         $this->collectionOrderFactory = $collectionOrderFactory;
@@ -70,6 +78,7 @@ class OrderLinesAll
         $this->storeMap = $storeMap;
         $this->syncRepository = $syncRepository;
         $this->helper = $helper;
+        $this->logger = $logger;
     }
 
     /**
@@ -77,6 +86,7 @@ class OrderLinesAll
      */
     public function sync(Closure $cl = null)
     {
+        $this->logger->info("Begin syncing all orderlines to maatoo.");
         $storesAllowed = [];
         foreach ($this->storeManager->getStores() as $store) {
             $storesAllowed[] = $store->getId();
@@ -153,16 +163,21 @@ class OrderLinesAll
             if (!empty($updateOrdersData) && !empty($maatoSyncInsertData)) {
                 $result = $this->adapter->makeRequest('orderLines/batch/new', $orderLines, 'POST');
                 $maatoSyncInsertData = $this->helper->setMaatooIdToInsertArray($maatoSyncInsertData, $result['orderLines']);
+                $this->logger->info(
+                    'Added items to orders from # '.array_key_first($updateOrdersData).
+                    ' to #'.array_key_last($updateOrdersData) . ' to maatoo'
+                );
                 if (is_callable($cl)) {
                     $cl(
                         'Added items to orders from # '.array_key_first($updateOrdersData).
-                        ' to #'.array_key_last($updateOrdersData)
+                        ' to #'.array_key_last($updateOrdersData) . ' to maatoo'
                     );
                 }
             }
 
             $this->helper->executeUpdateSalesOrderTable($updateOrdersData);
             $this->helper->executeInsertOnDuplicate($maatoSyncInsertData);
+            $this->logger->info("Finished syncing all orderlines to maatoo.");
         }
     }
 }

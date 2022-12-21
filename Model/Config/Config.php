@@ -225,11 +225,12 @@ class Config
     /**
      * @return mixed
      */
-    public function getAllowedStores()
+    public function getAllowedStores($websiteId = null)
     {
         return $this->scopeConfig->getValue(
             \Maatoo\Maatoo\Model\Config\Config::MAATOO_ALLOWED_STORE,
-            \Magento\Store\Model\ScopeInterface::SCOPE_WEBSITES
+            \Magento\Store\Model\ScopeInterface::SCOPE_WEBSITES,
+            $websiteId
         );
     }
 

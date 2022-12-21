@@ -58,6 +58,11 @@ class Category
     private $searchCriteriaBuilder;
 
     /**
+     * @var \Psr\Log\LoggerInterface
+     */
+    private $logger;
+
+    /**
      * Category constructor.
      * @param \Maatoo\Maatoo\Model\StoreConfigManager $storeManager
      * @param \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $collectionFactory
@@ -68,6 +73,7 @@ class Category
      * @param \Maatoo\Maatoo\Adapter\AdapterInterface $adapter
      * @param \Maatoo\Maatoo\Model\StoreMap $storeMap
      * @param \Maatoo\Maatoo\Model\SyncRepository $syncRepository
+     * @param \Psr\Log\LoggerInterface $logger
      */
     public function __construct(
         \Maatoo\Maatoo\Model\StoreConfigManager $storeManager,
@@ -78,7 +84,8 @@ class Category
         \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
         \Maatoo\Maatoo\Adapter\AdapterInterface $adapter,
         \Maatoo\Maatoo\Model\StoreMap $storeMap,
-        \Maatoo\Maatoo\Model\SyncRepository $syncRepository
+        \Maatoo\Maatoo\Model\SyncRepository $syncRepository,
+        \Psr\Log\LoggerInterface $logger
     )
     {
         $this->storeManager = $storeManager;
@@ -90,6 +97,7 @@ class Category
         $this->syncRepository = $syncRepository;
         $this->urlBilder = $urlBilder;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->logger = $logger;
     }
 
     /**
@@ -97,9 +105,11 @@ class Category
      */
     public function sync(\Closure $cl = null)
     {
+        $this->logger->info("Begin syncing categories to maatoo.");
         $parameters = [];
         $storesMaatoo = $this->adapter->makeRequest('stores', $parameters, 'GET');
         if(empty($storesMaatoo['total'])) {
+            $this->logger->warning('Before loading categories you must load stores');
             if (is_callable($cl)) {
                 $cl('Before loading categories you must load stores');
             }
@@ -146,13 +156,15 @@ class Category
 
                     if (empty($item->getData('sync_status')) || $item->getData('sync_status') == SyncInterface::STATUS_EMPTY) {
                         $result = $this->adapter->makeRequest('product-categories/new', $parameters, 'POST');
+                        $this->logger->info('Added category #' . $item->getId() . ' ' . $category->getName() . ' to maatoo');
                         if(is_callable($cl)) {
-                            $cl('Added category #' . $item->getId()) . ' ' . $category->getName();
+                            $cl('Added category #' . $item->getId() . ' ' . $category->getName() . ' to maatoo');
                         }
                     } elseif ($item->getData('sync_status') == SyncInterface::STATUS_UPDATED) {
                         $result = $this->adapter->makeRequest('product-categories/' . $item->getData('sync_maatoo_id') . '/edit', $parameters, 'PATCH');
+                        $self->logger->info('Updated category #' . $item->getId() . ' ' . $category->getName() . ' in maatoo');
                         if(is_callable($cl)) {
-                            $cl('Updated category #' . $item->getId()) . ' ' . $category->getName();
+                            $cl('Updated category #' . $item->getId() . ' ' . $category->getName() . ' in maatoo');
                         }
                     }
 
@@ -183,12 +195,14 @@ class Category
             foreach ($collectionForDelete as $item)
             {
                 $result = $this->adapter->makeRequest('product-categories/' . $item->getMaatooId() . '/delete', [], 'DELETE');
+                $this->logger->info('Deleted category from maatoo with id #' . $item->getMaatooId());
                 if(is_callable($cl)) {
-                    $cl('Deleted category #' . $item->getMaatooId());
+                    $cl('Deleted category from maatoo with id #' . $item->getMaatooId());
                 }
 
                 $this->syncRepository->delete($item);
             }
         }
+        $this->logger->info("Finished syncing categories to maatoo.");
     }
 }

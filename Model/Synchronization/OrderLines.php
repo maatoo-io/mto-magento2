@@ -124,6 +124,7 @@ class OrderLines
      */
     public function sync(\Closure $cl = null)
     {
+        $this->logger->info("Begin syncing orderlines to maatoo.");
         //$this->syncOrder->sync($cl);
 
         foreach ($this->storeManager->getStores() as $store) {
@@ -229,8 +230,9 @@ class OrderLines
                         $parameters,
                         'PATCH'
                     );
+                    $this->logger->info('Updated item #' . $item->getItemId() . ' in order #' . $sync->getData('maatoo_id') . ' in maatoo');
                     if (is_callable($cl)) {
-                        $cl('Updated item in order #' . $item->getItemId());
+                        $cl('Updated item #' . $item->getItemId() . ' in order #' . $sync->getData('maatoo_id') . ' ub maatoo');
                     }
                 }
 
@@ -254,6 +256,10 @@ class OrderLines
             if (!empty($orderLines) && !empty($maatoSyncInsertData)) {
                 $result = $this->adapter->makeRequest('orderLines/batch/new', $orderLines, 'POST');
                 $maatoSyncInsertData = $this->helper->setMaatooIdToInsertArray($maatoSyncInsertData, $result['orderLines']);
+                $this->logger->info(
+                    'Added items to orders from # ' . reset($updatedOrderItems) .
+                    ' to #' . end($updatedOrderItems) . ' in maatoo'
+                );
                 if (is_callable($cl)) {
                     $cl(
                         'Added items to orders from # ' . reset($updatedOrderItems) .
@@ -273,13 +279,15 @@ class OrderLines
                 $collectionForDelete = $this->syncRepository->getList($searchCriteria);
                 foreach ($collectionForDelete as $itemDel) {
                     $result = $this->adapter->makeRequest('orderLines/' . $itemDel->getMaatooId() . '/delete', [], 'DELETE');
+                    $this->logger->info('Deleted item from order #' . $itemDel->getMaatooId());
                     if (is_callable($cl)) {
-                        $cl('Deleted item from order #' . $itemDel->getMaatooId());
+                        $cl('Deleted item from order #' . $itemDel->getMaatooId() . ' in maatoo');
                     }
 
                     $this->syncRepository->delete($itemDel);
                 }
             }
         }
+        $this->logger->info("Finished syncing orderlines to maatoo.");
     }
 }

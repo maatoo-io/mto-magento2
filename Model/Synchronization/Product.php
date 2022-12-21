@@ -65,6 +65,11 @@ class Product
     protected $stockRegistry;
 
     /**
+     * @var \Psr\Log\LoggerInterface
+     */
+    private $logger;
+
+    /**
      * Product constructor.
      * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
      * @param \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $collectionFactory
@@ -79,6 +84,7 @@ class Product
      * @param Category $syncCategory
      * @param \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable $configurableProductType
      * @param \Magento\CatalogInventory\Api\StockRegistryInterface $stockRegistry
+     * @param \Psr\Log\LoggerInterface $logger
      */
     public function __construct(
         \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
@@ -93,7 +99,8 @@ class Product
         \Maatoo\Maatoo\Model\SyncRepository $syncRepository,
         \Maatoo\Maatoo\Model\Synchronization\Category $syncCategory,
         \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable $configurableProductType,
-        \Magento\CatalogInventory\Api\StockRegistryInterface $stockRegistry
+        \Magento\CatalogInventory\Api\StockRegistryInterface $stockRegistry,
+        \Psr\Log\LoggerInterface $logger
 
     )
     {
@@ -110,6 +117,7 @@ class Product
         $this->syncCategory = $syncCategory;
         $this->configurableProductType = $configurableProductType;
         $this->stockRegistry = $stockRegistry;
+        $this->logger = $logger;
     }
 
     /**
@@ -117,11 +125,13 @@ class Product
      */
     public function sync(\Closure $cl = null)
     {
+        $this->logger->info("Begin syncing products to maatoo.");
         $this->syncCategory->sync($cl);
 
         $parameters = [];
         $categoryMaatoo = $this->adapter->makeRequest('product-categories', $parameters, 'GET');
         if (empty($categoryMaatoo['total'])) {
+            $this->logger->warning('Before loading products you must load product categories');
             if (is_callable($cl)) {
                 $cl('Before loading products you must load product categories');
             }
@@ -284,13 +294,15 @@ class Product
 
                 if (empty($sync->getData('status')) || $sync->getData('status') == SyncInterface::STATUS_EMPTY) {
                     $result = $this->adapter->makeRequest('products/new', $parameters, 'POST');
+                    $this->logger->info('Added product #' . $product->getId() . ' ' . $product->getName() . ' to maatoo');
                     if (is_callable($cl)) {
-                        $cl('Added product #' . $product->getId()) . ' ' . $product->getName();
+                        $cl('Added product #' . $product->getId() . ' ' . $product->getName() . ' to maatoo');
                     }
                 } elseif ($sync->getData('status') == SyncInterface::STATUS_UPDATED) {
                     $result = $this->adapter->makeRequest('products/' . $sync->getData('maatoo_id') . '/edit', $parameters, 'PATCH');
+                    $this->logger->info('Updated product #' . $product->getId() . ' ' . $product->getName() . ' in maatoo');
                     if (is_callable($cl)) {
-                        $cl('Updated product #' . $product->getId()) . ' ' . $product->getName();
+                        $cl('Updated product #' . $product->getId() . ' ' . $product->getName() . ' in maatoo');
                     }
                 }
 
@@ -319,13 +331,15 @@ class Product
             $collectionForDelete = $this->syncRepository->getList($searchCriteria);
             foreach ($collectionForDelete as $item) {
                 $result = $this->adapter->makeRequest('products/' . $item->getMaatooId() . '/delete', [], 'DELETE');
+                $this->logger->info('Deleted product in maatoo with id #' . $item->getMaatooId());
                 if (is_callable($cl)) {
-                    $cl('Deleted product #' . $item->getMaatooId());
+                    $cl('Deleted product #' . $item->getMaatooId() . ' in maatoo');
                 }
 
                 $this->syncRepository->delete($item);
             }
         }
+        $this->logger->info("Finished syncing products to maatoo.");
     }
 
     protected function getBaseUrl($storeId, $type)

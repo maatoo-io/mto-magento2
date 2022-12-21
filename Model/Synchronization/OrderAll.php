@@ -12,6 +12,7 @@ use Maatoo\Maatoo\Model\SyncRepository;
 use Magento\Framework\UrlInterface;
 use Maatoo\Maatoo\Model\OrderStatusMap;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class OrderAll
@@ -56,6 +57,10 @@ class OrderAll
      */
     private $helper;
 
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     public function __construct(
         StoreConfigManager $storeManager,
@@ -64,8 +69,8 @@ class OrderAll
         AdapterInterface $adapter,
         StoreMap $storeMap,
         SyncRepository $syncRepository,
-        DataSync $helper
-
+        DataSync $helper,
+        LoggerInterface $logger
     ) {
         $this->storeManager = $storeManager;
         $this->collectionOrderFactory = $collectionOrderFactory;
@@ -74,6 +79,7 @@ class OrderAll
         $this->storeMap = $storeMap;
         $this->syncRepository = $syncRepository;
         $this->helper = $helper;
+        $this->logger = $logger;
     }
 
     /**
@@ -81,6 +87,7 @@ class OrderAll
      */
     public function sync(\Closure $cl = null)
     {
+        $this->logger->info("Begin syncing all orders to maatoo.");
         /** @var \Magento\Store\Api\Data\StoreInterface $store */
         foreach ($this->storeManager->getStores() as $store) {
             $collection = $this->collectionOrderFactory->create();
@@ -119,8 +126,9 @@ class OrderAll
 
                 if (empty($sync->getData('status')) || $sync->getData('status') == SyncInterface::STATUS_EMPTY) {
                     $result = $this->adapter->makeRequest('orders/new', $parameters, 'POST');
+                    $this->logger->info('Added order #'.$quoteId  . ' to maatoo');
                     if (is_callable($cl)) {
-                        $cl('Added order #'.$quoteId);
+                        $cl('Added order #'.$quoteId  . ' to maatoo');
                     }
                 }
 
@@ -143,6 +151,7 @@ class OrderAll
             $this->helper->executeUpdateSalesOrderTable($updateOrdersData);
             $this->helper->executeInsertOnDuplicate($maatoSyncInsertData);
         }
+        $this->logger->info("Finished syncing all orders to maatoo.");
     }
 
     /**
