@@ -38,7 +38,7 @@ class EntityDeleteObserver implements ObserverInterface
      * @param $entityType
      */
     public function __construct(
-        \Maatoo\Maatoo\Model\syncFactory $syncFactory,
+        \Maatoo\Maatoo\Model\SyncFactory $syncFactory,
         \Maatoo\Maatoo\Model\ResourceModel\Sync $syncResource,
         \Maatoo\Maatoo\Model\StoreConfigManager $storeManager,
         $entityType
@@ -57,10 +57,10 @@ class EntityDeleteObserver implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         $entity = $observer->getEvent()->getData('data_object');
-        $extensionAttribute = $entity->getExtensionAttributes();
+        /*$extensionAttribute = $entity->getExtensionAttributes();
         if (!$extensionAttribute && !$extensionAttribute->getMaatooStatus) {
             return;
-        }
+        }*/
 
         $entityId = (int)$entity->getId();
 
