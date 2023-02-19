@@ -86,6 +86,10 @@ class Order
      */
     private $logger;
 
+    /**
+     * @var LocaleHelper
+     */
+    private $localeHelper;
 
     public function __construct(
         \Maatoo\Maatoo\Model\StoreConfigManager                    $storeManager,
@@ -101,7 +105,8 @@ class Order
         \Maatoo\Maatoo\Model\OrderLeadFactory                      $orderLeadFactory,
         \Maatoo\Maatoo\Model\ResourceModel\OrderLead               $orderLeadResource,
         \Magento\Framework\Serialize\Serializer\Serialize          $serialize,
-        \Psr\Log\LoggerInterface                                   $logger
+        \Psr\Log\LoggerInterface                                   $logger,
+        \Maatoo\Maatoo\Helper\LocaleHelper                         $localeHelper
     )
     {
         $this->storeManager = $storeManager;
@@ -118,6 +123,7 @@ class Order
         $this->orderLeadResource = $orderLeadResource;
         $this->serialize = $serialize;
         $this->logger = $logger;
+        $this->localeHelper = $localeHelper;
     }
 
     /**
@@ -203,6 +209,7 @@ class Order
                             'firstname' => $parameters['firstName'] ?? '',
                             'lastname' => $parameters['lastName'] ?? '',
                             'email' => $parameters['email'] ?? '',
+                            'preferred_locale' => $this->localeHelper->getStoreViewLocale($store->getId())
                         ];
                         if (!empty($lead->getSubscribe())) {
                             $data['tags'] = $this->storeManager->getTags($store);
