@@ -4,6 +4,7 @@ namespace Maatoo\Maatoo\Plugin\Index;
 
 use Maatoo\Maatoo\Adapter\AdapterInterface;
 use Maatoo\Maatoo\Api\Data\SyncInterface;
+use Maatoo\Maatoo\Helper\LocaleHelper;
 use Maatoo\Maatoo\Model\Config\Config;
 use Maatoo\Maatoo\Model\ConversionFactory;
 use Maatoo\Maatoo\Model\ResourceModel\Conversion;
@@ -75,6 +76,11 @@ class SyncOrdersAfterPlace
      * @var Order
      */
     private $order;
+    
+    /**
+     * @var LocaleHelper
+     */
+    private $localeHelper;
 
     /**
      * Construct
@@ -102,9 +108,9 @@ class SyncOrdersAfterPlace
         Config                  $config,
         AdapterInterface        $adapter,
         LoggerInterface         $logger,
-        Order                   $order
-    )
-    {
+        Order                   $order,
+        LocaleHelper            $localeHelper
+    ) {
         $this->cartRepository = $cartRepository;
         $this->storeManager = $storeManager;
         $this->storeConfigManager = $storeConfigManager;
@@ -116,6 +122,7 @@ class SyncOrdersAfterPlace
         $this->adapter = $adapter;
         $this->logger = $logger;
         $this->order = $order;
+        $this->localeHelper = $localeHelper;
     }
 
     /**
@@ -186,6 +193,7 @@ class SyncOrdersAfterPlace
                     'firstname' => $parameters['firstName'] ?? '',
                     'lastname' => $parameters['lastName'] ?? '',
                     'email' => $parameters['email'] ?? '',
+                    'preferred_locale' => $this->localeHelper->getStoreViewLocale($store->getId())
                 ];
                 if (!empty($lead->getSubscribe())) {
                     $data['tags'] = $this->storeConfigManager->getTags($store);
