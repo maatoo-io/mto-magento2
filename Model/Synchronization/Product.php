@@ -172,7 +172,6 @@ class Product
                 $parent = $this->getParent($product->getId(), $store->getId());
 
 
-                $price = $this->productHelper->getPrice($product);
                 $categoryIds = $product->getCategoryIds();
 
                 // Don't allow empty categories
@@ -215,6 +214,35 @@ class Product
                 ];
 
                 // Price
+                // Simple product
+                $regularPrice = $product->getPriceInfo()->getPrice('regular_price')->getValue();
+                $specialPrice = $product->getPriceInfo()->getPrice('special_price')->getValue();
+
+                // Configurable product
+                if ($product->getTypeId() == 'configurable') {
+                    $basePrice = $product->getPriceInfo()->getPrice('regular_price');
+
+                    $regularPrice = $basePrice->getMinRegularAmount()->getValue();
+                    $specialPrice = $product->getFinalPrice();
+                }
+
+                // Bundle product
+                if ($product->getTypeId() == 'bundle') {
+                    $regularPrice = $product->getPriceInfo()->getPrice('regular_price')->getMinimalPrice()->getValue();
+                    $specialPrice = $product->getPriceInfo()->getPrice('final_price')->getMinimalPrice()->getValue();
+                }
+
+                // Grouped product
+                if ($product->getTypeId() == 'grouped') {
+                    $usedProds = $product->getTypeInstance(true)->getAssociatedProducts($product);
+                    foreach ($usedProds as $child) {
+                        if ($child->getId() != $product->getId()) {
+                            $regularPrice += $child->getPrice();
+                            $specialPrice += $child->getFinalPrice();
+                        }
+                    }
+                }
+
                 foreach ($productChildren as $variant) {
                     if ($variant && $variant->getId() != $product->getId()) {
                         //$variantPrice = $this->_getProductPrice($variant);
@@ -228,7 +256,14 @@ class Product
                         }
                     }
                 }
-                $parameters["price"] = number_format($price, 2, '.', '');
+
+                if ($specialPrice && $specialPrice < $regularPrice) {
+                    $parameters["price"] = number_format($specialPrice, 2, '.', '');
+                    $parameters["regular_price"] = number_format($regularPrice, 2, '.', '');
+                } else {
+                    $parameters["price"] = number_format($regularPrice, 2, '.', '');
+                    $parameters["regular_price"] = "";
+                }
 
                 // Image
                 if ($product->getImage() && $product->getImage()!='no_selection') {
