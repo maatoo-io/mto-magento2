@@ -259,10 +259,10 @@ class Product
 
                 if ($specialPrice && $specialPrice < $regularPrice) {
                     $parameters["price"] = number_format($specialPrice, 2, '.', '');
-                    $parameters["regular_price"] = number_format($regularPrice, 2, '.', '');
+                    $parameters["regularPrice"] = number_format($regularPrice, 2, '.', '');
                 } else {
                     $parameters["price"] = number_format($regularPrice, 2, '.', '');
-                    $parameters["regular_price"] = "";
+                    $parameters["regularPrice"] = "";
                 }
 
                 // Image
