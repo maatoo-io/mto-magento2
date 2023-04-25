@@ -96,7 +96,11 @@ class NewsletterSubscriberPlugin
         ];
 
         $data['tags'] = $this->storeConfigManager->getTags($store);
-        $this->adapter->makeRequest('contacts/' . $leadId . '/edit', $data, 'PATCH');
+        if (!empty($leadId)) {
+            $this->adapter->makeRequest('contacts/' . $leadId . '/edit', $data, 'PATCH');
+        } else {
+            $this->adapter->makeRequest('contacts/new', $data, 'POST');
+        }
 
 
         return $result;
