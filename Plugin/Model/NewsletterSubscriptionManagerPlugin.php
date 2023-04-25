@@ -2,6 +2,7 @@
 
 namespace Maatoo\Maatoo\Plugin\Model;
 
+use Maatoo\Maatoo\Helper\LocaleHelper;
 use Maatoo\Maatoo\Model\Config\Config;
 use Maatoo\Maatoo\Adapter\AdapterInterface;
 use Maatoo\Maatoo\Model\StoreConfigManager;
@@ -47,6 +48,11 @@ class NewsletterSubscriptionManagerPlugin
 
     private $logger;
 
+    /**
+     * @var LocaleHelper
+     */
+    private $localeHelper;
+
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         Config $config,
@@ -54,7 +60,8 @@ class NewsletterSubscriptionManagerPlugin
         AdapterInterface $adapter,
         CookieManagerInterface $cookieManager,
         StoreManagerInterface $storeManager,
-        LoggerInterface $logger)
+        LoggerInterface $logger,
+        LocaleHelper $localeHelper)
     {
         $this->scopeConfig = $scopeConfig;
         $this->config = $config;
@@ -63,6 +70,7 @@ class NewsletterSubscriptionManagerPlugin
         $this->cookieManager = $cookieManager;
         $this->storeManager = $storeManager;
         $this->logger = $logger;
+        $this->localeHelper = $localeHelper;
 
     }
 
@@ -80,6 +88,7 @@ class NewsletterSubscriptionManagerPlugin
         $leadId = $this->cookieManager->getCookie('mtc_id');
         $data = [
             'email' => $email,
+            'preferred_locale' => $this->localeHelper->getStoreViewLocale($store->getId())
         ];
 
         $data['tags'] = $this->storeConfigManager->getTags($store);
