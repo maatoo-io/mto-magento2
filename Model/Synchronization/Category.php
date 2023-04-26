@@ -167,7 +167,7 @@ class Category
                         }
                     } elseif ($item->getData('sync_status') == SyncInterface::STATUS_UPDATED) {
                         $result = $this->adapter->makeRequest('product-categories/' . $item->getData('sync_maatoo_id') . '/edit', $parameters, 'PATCH');
-                        $self->logger->info('Updated category #' . $item->getId() . ' ' . $category->getName() . ' in maatoo');
+                        $this->logger->info('Updated category #' . $item->getId() . ' ' . $category->getName() . ' in maatoo');
                         if(is_callable($cl)) {
                             $cl('Updated category #' . $item->getId() . ' ' . $category->getName() . ' in maatoo');
                         }
