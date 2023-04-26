@@ -58,7 +58,7 @@ class Category
     private $searchCriteriaBuilder;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -73,7 +73,7 @@ class Category
      * @param \Maatoo\Maatoo\Adapter\AdapterInterface $adapter
      * @param \Maatoo\Maatoo\Model\StoreMap $storeMap
      * @param \Maatoo\Maatoo\Model\SyncRepository $syncRepository
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Maatoo\Maatoo\Logger\Logger $logger
      */
     public function __construct(
         \Maatoo\Maatoo\Model\StoreConfigManager $storeManager,
@@ -85,7 +85,7 @@ class Category
         \Maatoo\Maatoo\Adapter\AdapterInterface $adapter,
         \Maatoo\Maatoo\Model\StoreMap $storeMap,
         \Maatoo\Maatoo\Model\SyncRepository $syncRepository,
-        \Psr\Log\LoggerInterface $logger
+        \Maatoo\Maatoo\Logger\Logger $logger
     )
     {
         $this->storeManager = $storeManager;

@@ -55,7 +55,7 @@ class OrderLines
     private $config;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -83,7 +83,7 @@ class OrderLines
      * @param \Maatoo\Maatoo\Model\StoreMap $storeMap
      * @param \Maatoo\Maatoo\Model\SyncRepository $syncRepository
      * @param Order $syncOrder
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Maatoo\Maatoo\Logger\Logger $logger
      * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute $eavAttribute
      * @param \Magento\Framework\App\ResourceConnection  $resource
      * @param \Maatoo\Maatoo\Helper\DataSync $helper
@@ -98,7 +98,7 @@ class OrderLines
         \Maatoo\Maatoo\Model\SyncRepository $syncRepository,
         \Maatoo\Maatoo\Model\Synchronization\Order $syncOrder,
         \Maatoo\Maatoo\Model\Config\Config $config,
-        \Psr\Log\LoggerInterface $logger,
+        \Maatoo\Maatoo\Logger\Logger $logger,
         \Magento\Eav\Model\ResourceModel\Entity\Attribute $eavAttribute,
         \Magento\Framework\App\ResourceConnection $resource,
         \Maatoo\Maatoo\Helper\DataSync $helper

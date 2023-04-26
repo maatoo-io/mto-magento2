@@ -17,7 +17,7 @@ use Magento\Framework\Serialize\Serializer\Serialize;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Psr\Log\LoggerInterface;
+use Maatoo\Maatoo\Logger\Logger;
 
 class SyncOrdersAfterPlace
 {
@@ -68,7 +68,7 @@ class SyncOrdersAfterPlace
     private $adapter;
 
     /**
-     * @var LoggerInterface
+     * @var Logger
      */
     private $logger;
 
@@ -76,7 +76,7 @@ class SyncOrdersAfterPlace
      * @var Order
      */
     private $order;
-    
+
     /**
      * @var LocaleHelper
      */
@@ -94,7 +94,7 @@ class SyncOrdersAfterPlace
      * @param Serialize               $serialize
      * @param Config                  $config
      * @param AdapterInterface        $adapter
-     * @param LoggerInterface         $logger
+     * @param Logger                  $logger
      * @param Order                   $order
      */
     public function __construct(
@@ -107,7 +107,7 @@ class SyncOrdersAfterPlace
         Serialize               $serialize,
         Config                  $config,
         AdapterInterface        $adapter,
-        LoggerInterface         $logger,
+        Logger                  $logger,
         Order                   $order,
         LocaleHelper            $localeHelper
     ) {

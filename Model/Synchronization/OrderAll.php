@@ -12,7 +12,7 @@ use Maatoo\Maatoo\Model\SyncRepository;
 use Magento\Framework\UrlInterface;
 use Maatoo\Maatoo\Model\OrderStatusMap;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
-use Psr\Log\LoggerInterface;
+use \Maatoo\Maatoo\Logger\Logger;
 
 /**
  * Class OrderAll
@@ -58,7 +58,7 @@ class OrderAll
     private $helper;
 
     /**
-     * @var LoggerInterface
+     * @var Logger
      */
     private $logger;
 
@@ -70,7 +70,7 @@ class OrderAll
         StoreMap $storeMap,
         SyncRepository $syncRepository,
         DataSync $helper,
-        LoggerInterface $logger
+        Logger $logger
     ) {
         $this->storeManager = $storeManager;
         $this->collectionOrderFactory = $collectionOrderFactory;

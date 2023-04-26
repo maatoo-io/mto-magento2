@@ -11,7 +11,7 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\AddressInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
-use Psr\Log\LoggerInterface;
+use Maatoo\Maatoo\Logger\Logger;
 
 class GuestSavePaymentPlugin
 {
@@ -30,14 +30,14 @@ class GuestSavePaymentPlugin
      * @param OrderLead $orderLeadResource
      * @param CartRepositoryInterface $quoteRepository
      * @param MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId
-     * @param LoggerInterface $logger
+     * @param Logger $logger
      */
     public function __construct(
         OrderLeadFactory        $orderLeadFactory,
         OrderLead               $orderLeadResource,
         CartRepositoryInterface $quoteRepository,
         MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId,
-        LoggerInterface         $logger
+        Logger                  $logger
     ) {
         $this->orderLeadFactory = $orderLeadFactory;
         $this->orderLeadResource = $orderLeadResource;

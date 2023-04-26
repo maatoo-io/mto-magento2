@@ -12,7 +12,7 @@ class CheckoutSubmitAllObserver implements ObserverInterface
     private $storeManager;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -49,7 +49,7 @@ class CheckoutSubmitAllObserver implements ObserverInterface
         \Magento\Framework\Stdlib\CookieManagerInterface $cookieManager,
         \Maatoo\Maatoo\Model\OrderLeadFactory $orderLeadFactory,
         \Maatoo\Maatoo\Model\ResourceModel\OrderLead $orderLeadResource,
-        \Psr\Log\LoggerInterface $logger
+        \Maatoo\Maatoo\Logger\Logger $logger
     ) {
         $this->storeManager = $storeManager;
         $this->shippingInformation = $shippingInformation;

@@ -25,7 +25,7 @@ class Store
     private $maatooStoreRepository;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -34,13 +34,13 @@ class Store
      * @param \Maatoo\Maatoo\Model\StoreConfigManager $storeManager
      * @param \Maatoo\Maatoo\Adapter\AdapterInterface $adapter
      * @param \Maatoo\Maatoo\Model\StoreRepository $maatooStoreRepository
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Maatoo\Maatoo\Logger\Logger $logger
      */
     public function __construct(
         \Maatoo\Maatoo\Model\StoreConfigManager $storeManager,
         \Maatoo\Maatoo\Adapter\AdapterInterface $adapter,
         \Maatoo\Maatoo\Model\StoreRepository $maatooStoreRepository,
-        \Psr\Log\LoggerInterface $logger
+        \Maatoo\Maatoo\Logger\Logger $logger
     )
     {
         $this->storeManager = $storeManager;

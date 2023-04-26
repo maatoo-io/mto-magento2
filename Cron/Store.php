@@ -12,7 +12,7 @@ class Store
     private $store;
 
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
+        \Maatoo\Maatoo\Logger\Logger $logger,
         \Maatoo\Maatoo\Model\Synchronization\Store $store
     )
     {

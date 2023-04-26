@@ -12,7 +12,7 @@ class Category
     private $category;
 
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
+        \Maatoo\Maatoo\Logger\Logger $logger,
         \Maatoo\Maatoo\Model\Synchronization\Category $category
     )
     {

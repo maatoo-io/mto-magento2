@@ -37,7 +37,7 @@ class QuoteSaveByCustomerObserver implements ObserverInterface
     private $cookieManager;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -46,7 +46,7 @@ class QuoteSaveByCustomerObserver implements ObserverInterface
      * @param \Maatoo\Maatoo\Model\ConversionFactory $conversionFactory
      * @param \Maatoo\Maatoo\Model\ResourceModel\Conversion $conversionResource
      * @param \Magento\Customer\Model\Session $session
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Maatoo\Maatoo\Logger\Logger $logger
      */
     public function __construct(
         \Maatoo\Maatoo\Model\ConversionFactory $conversionFactory,
@@ -55,7 +55,7 @@ class QuoteSaveByCustomerObserver implements ObserverInterface
         \Maatoo\Maatoo\Model\ResourceModel\OrderLead $orderLeadResource,
         \Magento\Customer\Model\Session $session,
         \Magento\Framework\Stdlib\CookieManagerInterface $cookieManager,
-        \Psr\Log\LoggerInterface $logger
+        \Maatoo\Maatoo\Logger\Logger $logger
     )
     {
         $this->conversionFactory = $conversionFactory;

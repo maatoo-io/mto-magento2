@@ -23,7 +23,7 @@ class OrderSaveByCustomerObserver implements ObserverInterface
      */
     private $session;
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -32,13 +32,13 @@ class OrderSaveByCustomerObserver implements ObserverInterface
      * @param \Maatoo\Maatoo\Model\ConversionFactory $conversionFactory
      * @param \Maatoo\Maatoo\Model\ResourceModel\Conversion $conversionResource
      * @param \Magento\Customer\Model\Session $session
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Maatoo\Maatoo\Logger\Logger $logger
      */
     public function __construct(
         \Maatoo\Maatoo\Model\ConversionFactory $conversionFactory,
         \Maatoo\Maatoo\Model\ResourceModel\Conversion $conversionResource,
         \Magento\Customer\Model\Session $session,
-        \Psr\Log\LoggerInterface $logger
+        \Maatoo\Maatoo\Logger\Logger $logger
     )
     {
         $this->conversionFactory = $conversionFactory;

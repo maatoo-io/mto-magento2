@@ -65,7 +65,7 @@ class Product
     protected $stockRegistry;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -84,7 +84,7 @@ class Product
      * @param Category $syncCategory
      * @param \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable $configurableProductType
      * @param \Magento\CatalogInventory\Api\StockRegistryInterface $stockRegistry
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Maatoo\Maatoo\Logger\Logger $logger
      */
     public function __construct(
         \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
@@ -100,7 +100,7 @@ class Product
         \Maatoo\Maatoo\Model\Synchronization\Category $syncCategory,
         \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable $configurableProductType,
         \Magento\CatalogInventory\Api\StockRegistryInterface $stockRegistry,
-        \Psr\Log\LoggerInterface $logger
+        \Maatoo\Maatoo\Logger\Logger $logger
 
     )
     {
