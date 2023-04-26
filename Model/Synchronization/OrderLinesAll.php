@@ -10,7 +10,7 @@ use Maatoo\Maatoo\Model\StoreConfigManager;
 use Maatoo\Maatoo\Model\StoreMap;
 use Maatoo\Maatoo\Model\SyncRepository;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
-use Psr\Log\LoggerInterface;
+use Maatoo\Maatoo\Logger\Logger;
 
 /**
  * Class OrderLinesAll
@@ -50,7 +50,7 @@ class OrderLinesAll
     private $helper;
 
     /**
-     * @var LoggerInterface
+     * @var Logger
      */
     private $logger;
 
@@ -61,7 +61,7 @@ class OrderLinesAll
      * @param  StoreMap  $storeMap
      * @param  SyncRepository  $syncRepository
      * @param  DataSync  $helper
-     * @param LoggerInterface $logger
+     * @param Logger $logger
      */
     public function __construct(
         StoreConfigManager $storeManager,
@@ -70,7 +70,7 @@ class OrderLinesAll
         StoreMap $storeMap,
         SyncRepository $syncRepository,
         DataSync $helper,
-        LoggerInterface $logger
+        Logger $logger
     ) {
         $this->storeManager = $storeManager;
         $this->collectionOrderFactory = $collectionOrderFactory;

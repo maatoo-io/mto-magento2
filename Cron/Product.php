@@ -13,7 +13,7 @@ class Product
     private $product;
 
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
+        \Maatoo\Maatoo\Logger\Logger $logger,
         \Maatoo\Maatoo\Model\Synchronization\Product $product
     )
     {

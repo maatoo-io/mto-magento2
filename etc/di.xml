@@ -21,9 +21,9 @@
     </type>
     <type name="Maatoo\Maatoo\Logger\Logger">
         <arguments>
-            <argument name="name" xsi:type="string">maatoo_res</argument>
+            <argument name="name" xsi:type="string">maatoo</argument>
             <argument name="handlers"  xsi:type="array">
-                <item name="maatoo_log_handler" xsi:type="object">Maatoo\Maatoo\Logger\Handler</item>
+                <item name="debug" xsi:type="object">Maatoo\Maatoo\Logger\Handler</item>
             </argument>
         </arguments>
     </type>

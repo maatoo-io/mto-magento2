@@ -12,7 +12,7 @@ use Magento\Store\Api\Data\StoreInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Newsletter\Model\SubscriptionManager;
 use Magento\Store\Model\StoreManagerInterface;
-use Psr\Log\LoggerInterface;
+use Maatoo\Maatoo\Logger\Logger;
 
 class NewsletterSubscriptionManagerPlugin
 {
@@ -60,7 +60,7 @@ class NewsletterSubscriptionManagerPlugin
         AdapterInterface $adapter,
         CookieManagerInterface $cookieManager,
         StoreManagerInterface $storeManager,
-        LoggerInterface $logger,
+        Logger $logger,
         LocaleHelper $localeHelper)
     {
         $this->scopeConfig = $scopeConfig;

@@ -12,7 +12,7 @@ class OrderLinesAll
     private $orderLinesAll;
 
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
+        \Maatoo\Maatoo\Logger\Logger $logger,
         \Maatoo\Maatoo\Model\Synchronization\OrderLinesAll $orderLinesAll
     ) {
         $this->logger = $logger;

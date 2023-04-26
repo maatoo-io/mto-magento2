@@ -12,7 +12,7 @@ class OrderLines
     private $order;
 
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
+        \Maatoo\Maatoo\Logger\Logger $logger,
         \Maatoo\Maatoo\Model\Synchronization\OrderLines $order
     )
     {

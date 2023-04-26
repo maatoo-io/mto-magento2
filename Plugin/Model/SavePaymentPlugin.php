@@ -8,7 +8,7 @@ use Magento\Checkout\Api\PaymentInformationManagementInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\AddressInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
-use Psr\Log\LoggerInterface;
+use Maatoo\Maatoo\Logger\Logger;
 
 class SavePaymentPlugin
 {
@@ -25,12 +25,12 @@ class SavePaymentPlugin
      *
      * @param OrderLeadFactory $orderLeadFactory
      * @param OrderLead $orderLeadResource
-     * @param LoggerInterface $logger
+     * @param Logger $logger
      */
     public function __construct(
         OrderLeadFactory $orderLeadFactory,
         OrderLead $orderLeadResource,
-        LoggerInterface $logger
+        Logger $logger
     ) {
         $this->orderLeadFactory = $orderLeadFactory;
         $this->orderLeadResource = $orderLeadResource;

@@ -82,7 +82,7 @@ class Order
     private $serialize;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -105,7 +105,7 @@ class Order
         \Maatoo\Maatoo\Model\OrderLeadFactory                      $orderLeadFactory,
         \Maatoo\Maatoo\Model\ResourceModel\OrderLead               $orderLeadResource,
         \Magento\Framework\Serialize\Serializer\Serialize          $serialize,
-        \Psr\Log\LoggerInterface                                   $logger,
+        \Maatoo\Maatoo\Logger\Logger                               $logger,
         \Maatoo\Maatoo\Helper\LocaleHelper                         $localeHelper
     )
     {

@@ -38,14 +38,16 @@ class Curl implements AdapterInterface
         $username = $this->config->getMaatooUser();
         $password = $this->clientResolver->getPassword($this->config->getMaatooPassword());
         $this->auth->setup($username, $password);
-        $this->logger->info('url: ' . $url);
-        $this->logger->info('parameters: ' . json_encode($parameters));
         $result = [];
+
         try {
             $result = $this->auth->makeRequest($url, $parameters, $method, $settings);
-            $this->logger->info('result: ' . json_encode($result));
+            $this->logger->info("Request successful. Data: url='" . $url . "' parameters='" . json_encode($parameters) . "' method='" . $method . "'");
+            if ($this->config->isDebugEnabled()) {
+                $this->logger->debug("Request result: " . json_encode($result));
+            }
         } catch (\Exception $e) {
-            $this->logger->info('error: ' . $e->getMessage());
+            $this->logger->error("Request failed. Data: url='".$url."' parameters='".json_encode($parameters)."' method='".$method."' error='". $e->getMessage()."'");
         }
         return $result;
     }

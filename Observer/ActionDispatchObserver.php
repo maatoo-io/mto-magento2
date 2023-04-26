@@ -21,7 +21,7 @@ class ActionDispatchObserver implements ObserverInterface
     private $serialize;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Maatoo\Maatoo\Logger\Logger
      */
     private $logger;
 
@@ -33,7 +33,7 @@ class ActionDispatchObserver implements ObserverInterface
     public function __construct(
         \Magento\Customer\Model\Session                   $session,
         \Magento\Framework\Serialize\Serializer\Serialize $serialize,
-        \Psr\Log\LoggerInterface                          $logger
+        \Maatoo\Maatoo\Logger\Logger                      $logger
     )
     {
         $this->session = $session;
