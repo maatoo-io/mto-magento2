@@ -134,7 +134,11 @@ class Order
         $this->logger->info("Begin syncing orders to maatoo.");
         /** @var \Magento\Store\Api\Data\StoreInterface $store */
         foreach ($this->storeManager->getStores() as $store) {
-
+            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) || $this->storeMap->getStoreToMaatoo($store->getId()) === "") {
+                $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
+                continue;
+            }
+            
             $collection = $this->collectionQuoteFactory->create();
             $collection->addFieldToFilter('store_id', $store->getId());
             $lifetime = $this->config->getOrderLifetime();

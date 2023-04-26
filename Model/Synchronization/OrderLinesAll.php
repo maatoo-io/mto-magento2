@@ -87,9 +87,11 @@ class OrderLinesAll
     public function sync(Closure $cl = null)
     {
         $this->logger->info("Begin syncing all orderlines to maatoo.");
-        $storesAllowed = [];
         foreach ($this->storeManager->getStores() as $store) {
-            $storesAllowed[] = $store->getId();
+            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) || $this->storeMap->getStoreToMaatoo($store->getId()) === "") {
+                $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
+                continue;
+            }
 
             $collection = $this->collectionOrderFactory->create();
             $collection->addFieldToFilter('store_id', $store->getId());
