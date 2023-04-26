@@ -249,20 +249,6 @@ class Product
                     }
                 }
 
-                foreach ($productChildren as $variant) {
-                    if ($variant && $variant->getId() != $product->getId()) {
-                        //$variantPrice = $this->_getProductPrice($variant);
-                        $variantPrice = $this->productHelper->getPrice($variant);
-                        if ($price) {
-                            if ($variantPrice < $price) {
-                                $price = $variantPrice;
-                            }
-                        } else {
-                            $price = $variantPrice;
-                        }
-                    }
-                }
-
                 if ($specialPrice && $specialPrice < $regularPrice) {
                     $parameters["price"] = number_format($specialPrice, 2, '.', '');
                     $parameters["regularPrice"] = number_format($regularPrice, 2, '.', '');
