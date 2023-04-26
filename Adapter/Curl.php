@@ -42,9 +42,8 @@ class Curl implements AdapterInterface
 
         try {
             $result = $this->auth->makeRequest($url, $parameters, $method, $settings);
-            $this->logger->info("Request successful. Data: url='" . $url . "' parameters='" . json_encode($parameters) . "' method='" . $method . "'");
             if ($this->config->isDebugEnabled()) {
-                $this->logger->debug("Request result: " . json_encode($result));
+                $this->logger->debug("Request successful. Data: url='" . $url . "' parameters='" . json_encode($parameters) . "' method='" . $method . "' result='" . json_encode($result) . "'");
             }
         } catch (\Exception $e) {
             $this->logger->error("Request failed. Data: url='".$url."' parameters='".json_encode($parameters)."' method='".$method."' error='". $e->getMessage()."'");
