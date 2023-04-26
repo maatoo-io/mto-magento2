@@ -90,6 +90,11 @@ class OrderAll
         $this->logger->info("Begin syncing all orders to maatoo.");
         /** @var \Magento\Store\Api\Data\StoreInterface $store */
         foreach ($this->storeManager->getStores() as $store) {
+            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) || $this->storeMap->getStoreToMaatoo($store->getId()) === "") {
+                $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
+                continue;
+            }
+            
             $collection = $this->collectionOrderFactory->create();
             $collection->addFieldToFilter('store_id', $store->getId());
             $collection->addFieldToFilter('maatoo_sync', SyncInterface::ORDER_STATUS_EMPTY);

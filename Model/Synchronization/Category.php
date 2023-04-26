@@ -120,6 +120,11 @@ class Category
 
         foreach ($this->storeManager->getStores() as $store)
         {
+            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) || $this->storeMap->getStoreToMaatoo($store->getId()) === "") {
+                $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
+                continue;
+            }
+
             $collection = $this->collectionFactory->create();
             $collection
                 ->getSelect()

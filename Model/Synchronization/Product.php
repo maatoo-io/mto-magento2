@@ -139,6 +139,12 @@ class Product
         }
 
         foreach ($this->storeManager->getStores() as $store) {
+            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) || $this->storeMap->getStoreToMaatoo($store->getId()) === "") {
+                $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
+                continue;
+            }
+
+            $this->logger->info("Begin syncing products to maatoo for store: " . $store->getName() . " (#" . $store->getId() . ")");
             $collection = $this->collectionFactory->create();
             $collection->addStoreFilter($store);
 

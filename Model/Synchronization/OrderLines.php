@@ -128,6 +128,11 @@ class OrderLines
         //$this->syncOrder->sync($cl);
 
         foreach ($this->storeManager->getStores() as $store) {
+            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) || $this->storeMap->getStoreToMaatoo($store->getId()) === "") {
+                $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
+                continue;
+            }
+            
             /** @var \Magento\Quote\Model\ResourceModel\Quote\Item\Collection $collection */
             $collection = $this->collectionQuoteItemFactory->create();
             $lifetime = $this->config->getOrderLifetime();
