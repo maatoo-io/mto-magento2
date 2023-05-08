@@ -101,6 +101,7 @@ class NewsletterSubscriberPlugin
         $leadId = $this->cookieManager->getCookie('mtc_id');
         $data = [
             'email' => $email,
+            'preferred_locale' => $this->localeHelper->getStoreViewLocale($store->getId())
         ];
 
         $data['tags'] = $this->storeConfigManager->getTags($store);
