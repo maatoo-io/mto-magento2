@@ -292,7 +292,7 @@ class Product
 
                 // Visibility
                 $parameters["isVisible"] = true;
-                if ($product->getVisibility() == \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE) {
+                if ($product->getVisibility() == \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE || $product->getStatus() == \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED) {
                     $parameters["isVisible"] = false;
                 }
 
