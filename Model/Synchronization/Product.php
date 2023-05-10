@@ -264,6 +264,12 @@ class Product
                             $store->getId(),
                             \Magento\Framework\UrlInterface::URL_TYPE_MEDIA
                         ).$filePath;
+                } elseif ($product->getSmallImage() && $product->getSmallImage() !='no_selection') {
+                    $filePath = 'catalog/product/'.ltrim($product->getSmallImage(), '/');
+                    $parameters["imageUrl"] = $this->getBaseUrl(
+                            $store->getId(),
+                            \Magento\Framework\UrlInterface::URL_TYPE_MEDIA
+                        ).$filePath;
                 } else {
                     if ($parent && $parent->getImage() && $parent->getImage()!='no_selection') {
                         $filePath = 'catalog/product/'.ltrim($parent->getImage(), '/');
@@ -346,7 +352,7 @@ class Product
                     $sync->setEntityId($product->getId());
                     $sync->setStoreId($store->getId());
                     $sync->setEntityType(SyncInterface::TYPE_PRODUCT);
-                    $this->syncRepository->save($sync);
+                    //$this->syncRepository->save($sync);
                 }
             }
 
