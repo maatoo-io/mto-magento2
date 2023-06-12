@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Maatoo\Maatoo\Cron;
 
+use Maatoo\Maatoo\Plugin\ValidateCartCheckout;
+
 class OrderLines
 {
     protected $logger;
@@ -27,6 +29,7 @@ class OrderLines
      */
     public function execute()
     {
+        ValidateCartCheckout::$checker = true;
         $this->logger->info("Cronjob maatoo order lines is executed.");
         $this->order->sync();
     }

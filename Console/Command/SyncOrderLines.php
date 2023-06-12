@@ -3,6 +3,7 @@
 namespace Maatoo\Maatoo\Console\Command;
 
 use Exception;
+use Maatoo\Maatoo\Plugin\ValidateCartCheckout;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
@@ -69,6 +70,7 @@ class SyncOrderLines extends Command
      */
     public function generate(InputInterface $input, OutputInterface $output)
     {
+        ValidateCartCheckout::$checker = true;
         $output->writeln('<info>Maatoo synchronization order lines started.</info>');
         $this->sync->sync(
             function($message) use($output) {
