@@ -106,4 +106,12 @@
                 type="Maatoo\Maatoo\Plugin\Index\SaveBirthdayIntoCustomerAddress"
                 sortOrder="10"/>
     </type>
+
+    <type name="Magento\Catalog\Model\Product\Type\AbstractType">
+        <plugin name="maatoo_maatoo_validate_cart_checkout"
+                type="Maatoo\Maatoo\Plugin\ValidateCartCheckout"
+                sortOrder="9"
+                disabled="false"
+        />
+    </type>
 </config>
