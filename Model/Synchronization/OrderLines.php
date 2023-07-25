@@ -2,7 +2,6 @@
 
 namespace Maatoo\Maatoo\Model\Synchronization;
 
-use Intexsoft\SyncBrandPages\Api\Common\CommonQueueInterface;
 use Maatoo\Maatoo\Api\Data\SyncInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Quote\Model\ResourceModel\Quote;
