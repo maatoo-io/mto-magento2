@@ -163,7 +163,7 @@ class OrderLines
                     ),
                     []
                 );
-                $select->join(
+                $select->leftjoin(
                     [
                         'maatoo_sync' => $collection->getTable('maatoo_sync')
                     ],
