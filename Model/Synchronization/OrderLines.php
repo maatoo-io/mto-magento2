@@ -144,10 +144,7 @@ class OrderLines
             $lifetime = (int)$this->config->getOrderLifetime();
 
             $select = $collection->getSelect();
-            $select->limit(99);
-            $select->where(
-                new \Zend_Db_Expr('`updated_at` >= ' . strtotime("-$lifetime day", time()))
-            );
+            $select->limit(2000);
 
             $select->distinct();
 
@@ -163,20 +160,17 @@ class OrderLines
                     ),
                     []
                 );
-                $select->joinLeft(
-                    [
-                        'maatoo_sync' => $collection->getTable('maatoo_sync')
-                    ],
-                    sprintf(
-                        'main_table.item_id = maatoo_sync.entity_id AND maatoo_sync.entity_type = %s ' .
-                        ' AND maatoo_sync.store_id = %s AND maatoo_sync.status <> %s',
-                        SyncInterface::TYPE_ORDER_LINES,
-                        $store->getId(),
-                        SyncInterface::STATUS_SYNCHRONIZED
-                    ),
-                    []
-                );
             }
+
+            $select->where(
+                new \Zend_Db_Expr(sprintf('`main_table`.`updated_at` >= %s' .
+                    ' AND `main_table`.`item_id` NOT IN (SELECT `maatoo_sync`.`entity_id`' .
+                    ' FROM `maatoo_sync` WHERE `maatoo_sync`.`entity_type` = %s AND `maatoo_sync`.`status` = %s)',
+                    strtotime("-$lifetime day", time()),
+                    SyncInterface::TYPE_ORDER_LINES,
+                    SyncInterface::STATUS_SYNCHRONIZED
+                ))
+            );
 
             $updatedOrderItems = [];
             $orderLines = [];
@@ -185,6 +179,8 @@ class OrderLines
                 /** @var \Maatoo\Maatoo\Model\Sync $sync */
                 $sync = $this->syncRepository->getByParam([
                     'entity_id' => $item->getId(),
+                    'entity_type' => SyncInterface::TYPE_ORDER_LINES,
+                    'store_id' => $store->getId()
                 ]);
 
                 $maatooSyncProductRow = $this->syncRepository->getRow([
@@ -194,6 +190,12 @@ class OrderLines
                 ]);
 
                 if (empty($maatooSyncProductRow['maatoo_id'])) {
+                    $sync->setStatus(SyncInterface::STATUS_SYNCHRONIZED);
+                    $sync->setMaatooId(0);
+                    $sync->setEntityId($item->getId());
+                    $sync->setStoreId($item->getData('store_id'));
+                    $sync->setEntityType(SyncInterface::TYPE_ORDER_LINES);
+                    $this->syncRepository->save($sync);
                     continue;
                 }
 
@@ -204,6 +206,12 @@ class OrderLines
                 ]);
 
                 if (empty($maatooSyncOrderRow['maatoo_id'])) {
+                    $sync->setStatus(SyncInterface::STATUS_SYNCHRONIZED);
+                    $sync->setMaatooId(0);
+                    $sync->setEntityId($item->getId());
+                    $sync->setStoreId($item->getData('store_id'));
+                    $sync->setEntityType(SyncInterface::TYPE_ORDER_LINES);
+                    $this->syncRepository->save($sync);
                     continue;
                 }
 
