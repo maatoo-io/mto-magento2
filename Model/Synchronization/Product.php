@@ -352,7 +352,7 @@ class Product
                     $sync->setEntityId($product->getId());
                     $sync->setStoreId($store->getId());
                     $sync->setEntityType(SyncInterface::TYPE_PRODUCT);
-                    //$this->syncRepository->save($sync);
+                    $this->syncRepository->save($sync);
                 }
             }
 
