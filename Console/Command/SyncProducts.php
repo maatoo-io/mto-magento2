@@ -53,7 +53,7 @@ class SyncProducts extends Command
     protected function configure()
     {
         $this->setName('maatoo:sync:products')
-            ->setDescription(__('Maatoo synchronization'))
+            ->setDescription(__('Maatoo synchronization')->render())
             ->setDefinition([]);
         parent::configure();
     }
@@ -77,6 +77,8 @@ class SyncProducts extends Command
             [$this, 'generate'],
             [$input, $output]
         );
+
+        return Cli::RETURN_SUCCESS;
     }
 
     /**

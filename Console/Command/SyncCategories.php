@@ -36,7 +36,7 @@ class SyncCategories extends Command
     protected function configure()
     {
         $this->setName('maatoo:sync:categories')
-            ->setDescription(__('Maatoo synchronization'))
+            ->setDescription(__('Maatoo synchronization')->render())
             ->setDefinition([]);
         parent::configure();
     }
