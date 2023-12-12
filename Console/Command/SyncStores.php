@@ -37,7 +37,7 @@ class SyncStores extends Command
     protected function configure()
     {
         $this->setName('maatoo:sync:stores')
-            ->setDescription(__('Maatoo synchronization'))
+            ->setDescription(__('Maatoo synchronization')->render())
             ->setDefinition([]);
         parent::configure();
     }

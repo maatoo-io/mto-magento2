@@ -91,7 +91,7 @@ class MaatooSynchronization extends Command
     protected function configure()
     {
         $this->setName('maatoo:sync:all')
-            ->setDescription(__('Maatoo synchronization'))
+            ->setDescription(__('Maatoo synchronization')->render())
             ->setDefinition([]);
         parent::configure();
     }
@@ -109,6 +109,8 @@ class MaatooSynchronization extends Command
             [$this, 'generate'],
             [$input, $output]
         );
+
+        return Cli::RETURN_SUCCESS;
     }
 
     public function generate(InputInterface $input, OutputInterface $output)
