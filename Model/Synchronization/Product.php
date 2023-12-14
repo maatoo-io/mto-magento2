@@ -6,7 +6,10 @@ use Maatoo\Maatoo\Api\Data\SyncInterface;
 
 /**
  * Class Product
+ *
  * @package Maatoo\Maatoo\Model\Synchronization
+ *
+ * @deprecated
  */
 class Product
 {
