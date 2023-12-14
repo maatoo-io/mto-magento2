@@ -251,12 +251,14 @@ class ProductSyncService implements SyncServiceInterface
             }
 
             if (isset($result['errors'])) {
-                foreach ($result['errors'] as $errorData) {
+                foreach ($result['errors'] as $maatooId => $errorData) {
+                    $syncData = $productsDataToUpdate[$maatooId];
+
                     $this->logSyncResponseData(
                         sprintf(
                             'An error occurred while updating the product #%s %s in maatoo: %s',
-                            $syncData->getEntityId(),
-                            $productData['title'] ?? '',
+                            $syncData['externalProductId'] ?? '',
+                            $syncData['title'] ?? '',
                             $errorData['message'] ?? ''
                         ),
                         $cl
