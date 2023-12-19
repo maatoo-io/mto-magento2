@@ -2,18 +2,18 @@
 
 namespace Maatoo\Maatoo\Console\Command;
 
+use Maatoo\Maatoo\Service\ProductSyncService;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Maatoo\Maatoo\Model\Synchronization\Product;
 
 /**
  * Class SyncProducts
+ *
  * @package Maatoo\Maatoo\Console\Command
  */
 class SyncProducts extends Command
@@ -21,7 +21,7 @@ class SyncProducts extends Command
     use LockableTrait;
 
     /**
-     * @var Product
+     * @var ProductSyncService
      */
     private $sync;
 
@@ -32,18 +32,15 @@ class SyncProducts extends Command
 
     /**
      * SyncProducts constructor.
-     * @param Product $sync
-     * @param State $state
-     * @param string|null $name
      */
     public function __construct(
-        Product $sync,
+        ProductSyncService $sync,
         State $state,
         string $name = null
-    )
-    {
+    ) {
         $this->sync = $sync;
         $this->state = $state;
+
         parent::__construct($name);
     }
 
@@ -52,16 +49,20 @@ class SyncProducts extends Command
      */
     protected function configure()
     {
-        $this->setName('maatoo:sync:products')
-            ->setDescription(__('Maatoo synchronization'))
-            ->setDefinition([]);
+        $this->setName('maatoo:sync:products');
+        $this->setDescription(__('Maatoo synchronization')->render());
+        $this->setDefinition([]);
+
         parent::configure();
     }
 
     /**
+     * Executes SyncProducts
+     *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return int|void
+     *
+     * @return int
      * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -77,21 +78,28 @@ class SyncProducts extends Command
             [$this, 'generate'],
             [$input, $output]
         );
+
+        return Cli::RETURN_SUCCESS;
     }
 
     /**
+     * The function generates and synchronizes products using the Maatoo platform
+     *
      * @param InputInterface $input
      * @param OutputInterface $output
+     *
      * @return int
      */
     public function generate(InputInterface $input, OutputInterface $output)
     {
         $output->writeln('<info>Maatoo synchronization products started.</info>');
+
         $this->sync->sync(
             function($message) use($output) {
                 $output->writeln('<info>' . $message . '</info>');
             }
         );
+
         $output->writeln('<info>Maatoo synchronization products finished.</info>');
 
         return Cli::RETURN_SUCCESS;

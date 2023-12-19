@@ -3,33 +3,43 @@ declare(strict_types=1);
 
 namespace Maatoo\Maatoo\Cron;
 
+use Maatoo\Maatoo\Logger\Logger;
+use Maatoo\Maatoo\Service\ProductSyncService;
+
+/**
+ * Class Product
+ *
+ * @package Maatoo\Maatoo\Cron
+ */
 class Product
 {
-
-    protected $logger;
     /**
-     * @var \Maatoo\Maatoo\Model\Synchronization\Product
+     * @var Logger
      */
-    private $product;
+    private $logger;
 
+    /**
+     * @var ProductSyncService
+     */
+    private $productSyncService;
+
+    /**
+     * Product constructor.
+     */
     public function __construct(
-        \Maatoo\Maatoo\Logger\Logger $logger,
-        \Maatoo\Maatoo\Model\Synchronization\Product $product
-    )
-    {
+        Logger $logger,
+        ProductSyncService $productSyncService
+    ) {
         $this->logger = $logger;
-        $this->product = $product;
+        $this->productSyncService = $productSyncService;
     }
 
     /**
      * Execute the cron
-     *
-     * @return void
      */
-    public function execute()
+    public function execute(): void
     {
-        $this->logger->info("Cronjob maatoo products is executed.");
-        $this->product->sync();
+        $this->logger->info('Cronjob maatoo products is executed.');
+        $this->productSyncService->sync();
     }
 }
-
