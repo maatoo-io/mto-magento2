@@ -85,24 +85,25 @@ class OrderLines
      * @param Order $syncOrder
      * @param \Maatoo\Maatoo\Logger\Logger $logger
      * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute $eavAttribute
-     * @param \Magento\Framework\App\ResourceConnection $resource
+     * @param \Magento\Framework\App\ResourceConnection  $resource
      * @param \Maatoo\Maatoo\Helper\DataSync $helper
      */
     public function __construct(
-        \Maatoo\Maatoo\Model\StoreConfigManager                         $storeManager,
+        \Maatoo\Maatoo\Model\StoreConfigManager $storeManager,
         \Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory $collectionOrderFactory,
         \Magento\Quote\Model\ResourceModel\Quote\Item\CollectionFactory $collectionQuoteItemFactory,
-        \Magento\Framework\Api\SearchCriteriaBuilder                    $searchCriteriaBuilder,
-        \Maatoo\Maatoo\Adapter\AdapterInterface                         $adapter,
-        \Maatoo\Maatoo\Model\StoreMap                                   $storeMap,
-        \Maatoo\Maatoo\Model\SyncRepository                             $syncRepository,
-        \Maatoo\Maatoo\Model\Synchronization\Order                      $syncOrder,
-        \Maatoo\Maatoo\Model\Config\Config                              $config,
-        \Maatoo\Maatoo\Logger\Logger                                    $logger,
-        \Magento\Eav\Model\ResourceModel\Entity\Attribute               $eavAttribute,
-        \Magento\Framework\App\ResourceConnection                       $resource,
-        \Maatoo\Maatoo\Helper\DataSync                                  $helper
-    ) {
+        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+        \Maatoo\Maatoo\Adapter\AdapterInterface $adapter,
+        \Maatoo\Maatoo\Model\StoreMap $storeMap,
+        \Maatoo\Maatoo\Model\SyncRepository $syncRepository,
+        \Maatoo\Maatoo\Model\Synchronization\Order $syncOrder,
+        \Maatoo\Maatoo\Model\Config\Config $config,
+        \Maatoo\Maatoo\Logger\Logger $logger,
+        \Magento\Eav\Model\ResourceModel\Entity\Attribute $eavAttribute,
+        \Magento\Framework\App\ResourceConnection $resource,
+        \Maatoo\Maatoo\Helper\DataSync $helper
+    )
+    {
         $this->storeManager = $storeManager;
         $this->collectionOrderFactory = $collectionOrderFactory;
         $this->collectionQuoteItemFactory = $collectionQuoteItemFactory;
@@ -126,35 +127,32 @@ class OrderLines
         $this->logger->info("Begin syncing orderlines to maatoo.");
         //$this->syncOrder->sync($cl);
 
-        $attributeId = $this->eavAttribute->getIdByCode(
-            \Magento\Catalog\Model\Product::ENTITY,
-            'status'
-        );
-
         foreach ($this->storeManager->getStores() as $store) {
-            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) ||
-                $this->storeMap->getStoreToMaatoo($store->getId()) === ""
-            ) {
+            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) || $this->storeMap->getStoreToMaatoo($store->getId()) === "") {
                 $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
                 continue;
             }
 
             /** @var \Magento\Quote\Model\ResourceModel\Quote\Item\Collection $collection */
             $collection = $this->collectionQuoteItemFactory->create();
-            $lifetime = (int)$this->config->getOrderLifetime();
+            $lifetime = $this->config->getOrderLifetime();
+
+            $attributeId = $this->eavAttribute->getIdByCode(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'status'
+            );
 
             $select = $collection->getSelect();
-            $select->limit(2000);
-
-            $select->distinct();
+            $select->where(
+                new \Zend_Db_Expr('TIME_TO_SEC(TIMEDIFF(CURRENT_TIMESTAMP, `updated_at`)) <= ' . $lifetime * 24 * 60 * 60)
+            );
 
             if ($attributeId) {
-                $select->join(
-                    [
-                        'additional_table' => $collection->getTable('catalog_product_entity_int')
-                    ],
+                $select->join([
+                    'additional_table' => $collection->getTable('catalog_product_entity_int')
+                ],
                     sprintf(
-                        'main_table.product_id = additional_table.entity_id AND additional_table.attribute_id = %s AND additional_table.value <> %s',
+                        "main_table.product_id = additional_table.entity_id AND additional_table.attribute_id = %s AND additional_table.value <> %s",
                         $attributeId,
                         \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED
                     ),
@@ -162,26 +160,23 @@ class OrderLines
                 );
             }
 
-            $select->where(
-                new \Zend_Db_Expr(sprintf('`main_table`.`updated_at` >= %s' .
-                    ' AND `main_table`.`item_id` NOT IN (SELECT `maatoo_sync`.`entity_id`' .
-                    ' FROM `maatoo_sync` WHERE `maatoo_sync`.`entity_type` = %s AND `maatoo_sync`.`status` = %s)',
-                    strtotime("-$lifetime day", time()),
-                    SyncInterface::TYPE_ORDER_LINES,
-                    SyncInterface::STATUS_SYNCHRONIZED
-                ))
-            );
+            $select->distinct();
 
             $updatedOrderItems = [];
             $orderLines = [];
 
             foreach ($collection->getItems() as $item) {
+
                 /** @var \Maatoo\Maatoo\Model\Sync $sync */
                 $sync = $this->syncRepository->getByParam([
                     'entity_id' => $item->getId(),
                     'entity_type' => SyncInterface::TYPE_ORDER_LINES,
                     'store_id' => $store->getId()
                 ]);
+
+                if ($sync->getData('status') == SyncInterface::STATUS_SYNCHRONIZED) {
+                    continue;
+                }
 
                 $maatooSyncProductRow = $this->syncRepository->getRow([
                     'entity_id' => $item->getData('product_id'),
@@ -190,12 +185,6 @@ class OrderLines
                 ]);
 
                 if (empty($maatooSyncProductRow['maatoo_id'])) {
-                    $sync->setStatus(SyncInterface::STATUS_SYNCHRONIZED);
-                    $sync->setMaatooId(0);
-                    $sync->setEntityId($item->getId());
-                    $sync->setStoreId($item->getData('store_id'));
-                    $sync->setEntityType(SyncInterface::TYPE_ORDER_LINES);
-                    $this->syncRepository->save($sync);
                     continue;
                 }
 
@@ -206,12 +195,6 @@ class OrderLines
                 ]);
 
                 if (empty($maatooSyncOrderRow['maatoo_id'])) {
-                    $sync->setStatus(SyncInterface::STATUS_SYNCHRONIZED);
-                    $sync->setMaatooId(0);
-                    $sync->setEntityId($item->getId());
-                    $sync->setStoreId($item->getData('store_id'));
-                    $sync->setEntityType(SyncInterface::TYPE_ORDER_LINES);
-                    $this->syncRepository->save($sync);
                     continue;
                 }
 
@@ -221,6 +204,10 @@ class OrderLines
                     "order" => $maatooSyncOrderRow['maatoo_id'],
                     "quantity" => $item->getData('qty')
                 ];
+
+                if (count($orderLines) == 99) {
+                    break;
+                }
 
                 if (empty($sync->getData('status')) || $sync->getData('status') == SyncInterface::STATUS_EMPTY) {
                     $orderLines[] = [
@@ -240,6 +227,7 @@ class OrderLines
 
                     $updatedOrderItems[] = $item->getItemId();
                 }
+
 
                 $result = [];
 
