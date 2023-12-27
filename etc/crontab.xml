@@ -5,7 +5,7 @@
             <schedule>*/5 * * * *</schedule>
         </job>
         <job name="maatoo_cron_category" instance="Maatoo\Maatoo\Cron\Category" method="execute">
-            <schedule>*/5 * * * *</schedule>
+            <schedule>0 */8 * * *</schedule>
         </job>
         <job name="maatoo_cron_product" instance="Maatoo\Maatoo\Cron\Product" method="execute">
             <schedule>*/5 * * * *</schedule>

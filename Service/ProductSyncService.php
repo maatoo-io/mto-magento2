@@ -10,9 +10,8 @@ use Maatoo\Maatoo\Logger\Logger;
 use Maatoo\Maatoo\Model\StoreConfigManager;
 use Maatoo\Maatoo\Model\StoreMap;
 use Maatoo\Maatoo\Model\Sync;
-use Maatoo\Maatoo\Model\Synchronization\Category;
+use Maatoo\Maatoo\Service\CategorySyncService;
 use Maatoo\Maatoo\Model\SyncRepository;
-use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
@@ -26,13 +25,18 @@ use Magento\Framework\Api\SearchCriteriaBuilder;
  */
 class ProductSyncService implements SyncServiceInterface
 {
+    const SUCCSESS_RESPONCE_MESSAGES_FORMATS = [
+        'products/batch/new' => 'Added product #%s %s to maatoo',
+        'products/batch/edit' => 'Updated product #%s %s in maatoo',
+    ];
+
     /**
      * @var Logger
      */
     private $logger;
 
     /**
-     * @var Category
+     * @var \Maatoo\Maatoo\Service\CategorySyncService
      */
     private $syncCategory;
 
@@ -92,7 +96,7 @@ class ProductSyncService implements SyncServiceInterface
         AdapterInterface           $adapter,
         StoreMap                   $storeMap,
         SyncRepository             $syncRepository,
-        Category                   $syncCategory,
+        CategorySyncService        $syncCategory,
         StockRegistryInterface     $stockRegistry,
         Logger                     $logger,
         ProductSyncHelper          $productSyncHelper
@@ -118,6 +122,8 @@ class ProductSyncService implements SyncServiceInterface
         $this->logger->info('Begin syncing products to maatoo.');
         $this->syncCategory->sync($cl);
 
+        $productsDataToCreate = [];
+        $syncDataToCreate = [];
         $productsDataToUpdate = [];
         $syncDataToUpdate = [];
         $parameters = [];
@@ -159,7 +165,7 @@ class ProductSyncService implements SyncServiceInterface
             foreach ($collection as $item) {
                 try {
                     $product = $this->productRepository->getById($item->getId(), false, $storeId);
-                } catch (\Exception $exception) {
+                } catch (\Exception) {
                     $this->logger->info(sprintf('Product with id: %s is not found', $item->getId()));
                     continue;
                 }
@@ -215,13 +221,18 @@ class ProductSyncService implements SyncServiceInterface
                 }
 
                 if (empty($sync->getStatus()) || $sync->getStatus() == SyncInterface::STATUS_EMPTY) {
-                    $this->executesCreateProductRequest($product, $parameters, $sync, $storeId, $cl);
+                    $parameters['id'] = $product->getId();
+                    $productsDataToCreate[$parameters['id']] = $parameters;
+                    $syncDataToCreate[$parameters['id']] = $sync;
                 } elseif ($sync->getStatus() == SyncInterface::STATUS_UPDATED) {
                     $parameters['id'] = $sync->getMaatooId();
                     $productsDataToUpdate[$parameters['id']] = $parameters;
                     $syncDataToUpdate[$parameters['id']] = $sync;
                 }
             }
+
+            // Create products via batch
+            $this->executesCreateProductsRequest($productsDataToCreate, $syncDataToCreate, $cl);
 
             // Update products via batch
             $this->executesUpdateProductsRequests($productsDataToUpdate, $syncDataToUpdate, $cl);
@@ -236,22 +247,26 @@ class ProductSyncService implements SyncServiceInterface
     /**
      * Executes a request to create a new product
      */
-    private function executesCreateProductRequest(
-        ProductInterface $product,
-        array            $parameters,
-        Sync             $sync,
-        int              $storeId,
-        ?\Closure        $cl = null
+    private function executesCreateProductsRequest(
+        array     $productsDataToCreate,
+        array     $syncDataToCreate,
+        ?\Closure $cl = null
     ): void {
-        $result = $this->adapter->makeRequest('products/new', $parameters, 'POST') ?? [];
-
-        $this->logSyncResponseData(
-            sprintf('Added product #%s %s to maatoo', $product->getId(), $product->getName()),
-            $cl
+        $productsDataToCreateList = array_chunk(
+            $productsDataToCreate,
+            SyncServiceInterface::BATCH_SIZE_LIMIT,
+            true
         );
 
-        if (isset($result['product']['id'])) {
-            $this->productSyncHelper->updateSyncData($sync, $result['product']['id'], $product->getId(), $storeId);
+        foreach ($productsDataToCreateList as $productsList) {
+            $this->processProductsRequest(
+                'products/batch/new',
+                'POST',
+                $productsList,
+                $syncDataToCreate,
+                $productsDataToCreate,
+                $cl
+            );
         }
     }
 
@@ -266,48 +281,14 @@ class ProductSyncService implements SyncServiceInterface
         $productsDataToUpdateList = array_chunk($productsDataToUpdate, SyncServiceInterface::BATCH_SIZE_LIMIT, true);
 
         foreach ($productsDataToUpdateList as $productsList) {
-            $result = $this->adapter->makeRequest(
+            $this->processProductsRequest(
                 'products/batch/edit',
+                'PATCH',
                 $productsList,
-                'PATCH'
-            ) ?? null;
-
-            if (isset($result['products'])) {
-                foreach ($result['products'] as $productData) {
-                    $syncData = $syncDataToUpdate[$productData['id']];
-
-                    $this->productSyncHelper->updateSyncData(
-                        $syncData,
-                        $productData['id'],
-                        $syncData->getEntityId(),
-                        $syncData->getStoreId()
-                    );
-
-                    $this->logSyncResponseData(
-                        sprintf(
-                        'Updated product #%s %s in maatoo',
-                        $syncData->getEntityId(),
-                        $productData['title'] ?? ''),
-                        $cl
-                    );
-                }
-            }
-
-            if (isset($result['errors'])) {
-                foreach ($result['errors'] as $maatooId => $errorData) {
-                    $syncData = $productsDataToUpdate[$maatooId];
-
-                    $this->logSyncResponseData(
-                        sprintf(
-                            'An error occurred while updating the product #%s %s in maatoo: %s',
-                            $syncData['externalProductId'] ?? '',
-                            $syncData['title'] ?? '',
-                            $errorData['message'] ?? ''
-                        ),
-                        $cl
-                    );
-                }
-            }
+                $syncDataToUpdate,
+                $productsDataToUpdate,
+                $cl
+            );
         }
     }
 
@@ -343,6 +324,77 @@ class ProductSyncService implements SyncServiceInterface
 
         if (is_callable($cl)) {
             $cl($format);
+        }
+    }
+
+    /**
+     * Processes a request for products, updates the sync data for each product, and logs any errors that occur.
+     */
+    private function processProductsRequest(
+        string $endpoint,
+        string $method,
+        array  $productsList,
+        array  $productsSyncData,
+        array  $productsListData,
+        ?\Closure $cl = null
+    ): void {
+        $result = $this->adapter->makeRequest(
+            $endpoint,
+            $productsList,
+            $method
+        ) ?? null;
+
+        if (isset($result['products'])) {
+            foreach ($result['products'] as $maatooId => $productData) {
+                $syncData = $productsSyncData[$maatooId] ?? [];
+
+                if (!$syncData) {
+                    continue;
+                }
+
+                $entityId = $syncData->getEntityId() ?: $productsListData[$maatooId]['id'] ?? 0;
+                $storeId = $syncData->getStoreId() ?: $productsListData[$maatooId]['store'] ?? 0;
+
+                if (!$entityId || !$storeId) {
+                    continue;
+                }
+
+                $this->productSyncHelper->updateSyncData(
+                    $syncData,
+                    $productData['id'],
+                    $entityId,
+                    $storeId,
+                );
+
+                $this->logSyncResponseData(
+                    sprintf(
+                        self::SUCCSESS_RESPONCE_MESSAGES_FORMATS[$endpoint],
+                        $syncData->getEntityId(),
+                        $productData['title'] ?? ''
+                    ),
+                    $cl
+                );
+            }
+        }
+
+        if (isset($result['errors'])) {
+            foreach ($result['errors'] as $maatooId => $errorData) {
+                $syncData = $productsListData[$maatooId] ?? [];
+
+                if (!$syncData) {
+                    continue;
+                }
+
+                $this->logSyncResponseData(
+                    sprintf(
+                        'An error occurred while sending the product #%s %s data in maatoo: %s',
+                        $syncData['externalProductId'] ?? '',
+                        $syncData['title'] ?? '',
+                        $errorData['message'] ?? ''
+                    ),
+                    $cl
+                );
+            }
         }
     }
 }
