@@ -14,7 +14,7 @@ class SyncCategories extends Command
 {
     use LockableTrait;
 
-    private CategorySyncService $sync;
+    private $sync;
 
     /**
      * SyncCategories constructor.
