@@ -165,7 +165,7 @@ class ProductSyncService implements SyncServiceInterface
             foreach ($collection as $item) {
                 try {
                     $product = $this->productRepository->getById($item->getId(), false, $storeId);
-                } catch (\Exception) {
+                } catch (\Exception $e) {
                     $this->logger->info(sprintf('Product with id: %s is not found', $item->getId()));
                     continue;
                 }
@@ -363,7 +363,7 @@ class ProductSyncService implements SyncServiceInterface
                     $syncData,
                     $productData['id'],
                     $entityId,
-                    $storeId,
+                    $storeId
                 );
 
                 $this->logSyncResponseData(

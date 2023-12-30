@@ -135,6 +135,14 @@ class CategorySyncService
      */
     private function syncCategoriesByStore(StoreInterface $store, ?\Closure $cl): void
     {
+        $this->logSyncResponseData(
+            sprintf(
+                'Start category synchronisation process for shop %s ',
+                $store->getName()
+            ),
+            $cl
+        );
+
         $storeId = $store->getId();
 
         if (empty($this->storeMap->getStoreToMaatoo($storeId))) {
@@ -206,6 +214,8 @@ class CategorySyncService
 
         // Delete entity
         $this->executesDeleteCategoriesRequests($storeId, $cl);
+
+        $this->logSyncResponseData('Category synchronisation process completed', $cl);
     }
 
     /**
