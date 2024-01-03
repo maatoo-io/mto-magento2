@@ -363,7 +363,7 @@ class ProductSyncService implements SyncServiceInterface
                     $syncData,
                     $productData['id'],
                     $entityId,
-                    $storeId,
+                    $storeId
                 );
 
                 $this->logSyncResponseData(

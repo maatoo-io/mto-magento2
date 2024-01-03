@@ -14,6 +14,9 @@ class SyncCategories extends Command
 {
     use LockableTrait;
 
+    /**
+     * @var CategorySyncService
+     */
     private $sync;
 
     /**
