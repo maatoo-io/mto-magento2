@@ -338,9 +338,11 @@ class ProductSyncService implements SyncServiceInterface
         array  $productsListData,
         ?\Closure $cl = null
     ): void {
+        $products = array_values($productsList);
+
         $result = $this->adapter->makeRequest(
             $endpoint,
-            $productsList,
+            $products,
             $method
         ) ?? null;
 
