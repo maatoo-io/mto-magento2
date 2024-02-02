@@ -10,7 +10,6 @@ use Maatoo\Maatoo\Logger\Logger;
 use Maatoo\Maatoo\Model\StoreConfigManager;
 use Maatoo\Maatoo\Model\StoreMap;
 use Maatoo\Maatoo\Model\Sync;
-use Maatoo\Maatoo\Service\CategorySyncService;
 use Maatoo\Maatoo\Model\SyncRepository;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
@@ -36,7 +35,7 @@ class ProductSyncService implements SyncServiceInterface
     private $logger;
 
     /**
-     * @var \Maatoo\Maatoo\Service\CategorySyncService
+     * @var CategorySyncService
      */
     private $syncCategory;
 
@@ -121,11 +120,6 @@ class ProductSyncService implements SyncServiceInterface
     {
         $this->logger->info('Begin syncing products to maatoo.');
         $this->syncCategory->sync($cl);
-
-        $productsDataToCreate = [];
-        $syncDataToCreate = [];
-        $productsDataToUpdate = [];
-        $syncDataToUpdate = [];
         $parameters = [];
         $categoryMaatoo = $this->adapter->makeRequest('product-categories', $parameters);
 
@@ -160,82 +154,99 @@ class ProductSyncService implements SyncServiceInterface
 
             $collection = $this->collectionFactory->create();
             $collection->addStoreFilter($store);
+            $numberOfBatches = ceil($collection->getSize() / SyncServiceInterface::OPERATION_SIZE_LIMIT);
 
-            /** @var Product $product */
-            foreach ($collection as $item) {
-                try {
-                    $product = $this->productRepository->getById($item->getId(), false, $storeId);
-                } catch (\Exception $e) {
-                    $this->logger->info(sprintf('Product with id: %s is not found', $item->getId()));
-                    continue;
-                }
+            for ($batchId = 0; $batchId < $numberOfBatches; $batchId++) {
+                $this->logSyncResponseData(
+                    sprintf('The stage of synchronising %s from %s', $batchId + 1, $numberOfBatches),
+                    $cl
+                );
 
-                /** @var Sync $sync */
-                $sync = $this->syncRepository->getByParam([
-                    'entity_id'   => $product->getId(),
-                    'entity_type' => SyncInterface::TYPE_PRODUCT,
-                    'store_id'    => $storeId,
-                ]);
+                $productsDataToCreate = [];
+                $productsDataToUpdate = [];
+                $syncDataToCreate = [];
+                $syncDataToUpdate = [];
 
-                if ($sync->getData('status') == SyncInterface::STATUS_SYNCHRONIZED) {
-                    continue;
-                }
+                $collection->clear();
+                $collection->setPageSize(SyncServiceInterface::OPERATION_SIZE_LIMIT);
+                $collection->setCurPage($batchId + 1);
+                $collection->load();
 
-                // Get parent product
-                $parent = $this->productSyncHelper->getParent($product->getId(), $storeId);
-
-                $parameters = $this->productSyncHelper->getPreparedParameters($product, $storeId);
-
-                if (!$parameters) {
-                    continue;
-                }
-
-                // Price
-                $priceData = $this->productSyncHelper->getPreparedPriceData($product);
-                $parameters = array_merge($parameters, $priceData);
-
-                // Image
-                $parameters['imageUrl'] = $this->productSyncHelper->getPreparedImageUrlData($product, $store, $parent);
-
-                // Url
-                $parameters['url'] = $this->productSyncHelper->getPreparedProductUrl($product, $parent);
-
-                // Visibility
-                $parameters['isVisible'] = $this->productSyncHelper->getVisibilityStatus($product);
-
-                // Stock
-                $stock = $this->stockRegistry->getStockItem($product->getId(), $storeId);
-                $parameters['inventoryQuantity'] = (int)$stock->getQty();
-                $parameters['backorders'] = $stock->getBackorders();
-
-                // Handle children of configurable products
-                if ($parent) {
-                    $parentMaatooData = $this->productSyncHelper->getProductParentParameter($parent->getId(), $storeId);
-
-                    if (!$parentMaatooData) {
+                foreach ($collection as $item) {
+                    try {
+                        $product = $this->productRepository->getById($item->getId(), false, $storeId);
+                    } catch (\Exception $e) {
+                        $this->logger->info(sprintf('Product with id: %s is not found', $item->getId()));
                         continue;
                     }
 
-                    // Get maatoo id of parent product
-                    $parameters['productParent'] = (int)$parentMaatooData['maatoo_id'];
+                    /** @var Sync $sync */
+                    $sync = $this->syncRepository->getByParam([
+                        'entity_id'   => $product->getId(),
+                        'entity_type' => SyncInterface::TYPE_PRODUCT,
+                        'store_id'    => $storeId,
+                    ]);
+
+                    if ($sync->getData('status') == SyncInterface::STATUS_SYNCHRONIZED) {
+                        continue;
+                    }
+
+                    // Get parent product
+                    $parent = $this->productSyncHelper->getParent($product->getId(), $storeId);
+
+                    $parameters = $this->productSyncHelper->getPreparedParameters($product, $storeId);
+
+                    if (!$parameters) {
+                        continue;
+                    }
+
+                    // Price
+                    $priceData = $this->productSyncHelper->getPreparedPriceData($product);
+                    $parameters = array_merge($parameters, $priceData);
+
+                    // Image
+                    $parameters['imageUrl'] = $this->productSyncHelper->getPreparedImageUrlData($product, $store, $parent);
+
+                    // Url
+                    $parameters['url'] = $this->productSyncHelper->getPreparedProductUrl($product, $parent);
+
+                    // Visibility
+                    $parameters['isVisible'] = $this->productSyncHelper->getVisibilityStatus($product);
+
+                    // Stock
+                    $stock = $this->stockRegistry->getStockItem($product->getId(), $storeId);
+                    $parameters['inventoryQuantity'] = (int)$stock->getQty();
+                    $parameters['backorders'] = $stock->getBackorders();
+
+                    // Handle children of configurable products
+                    if ($parent) {
+                        $parentMaatooData = $this->productSyncHelper->getProductParentParameter($parent->getId(), $storeId);
+
+                        if (!$parentMaatooData) {
+                            continue;
+                        }
+
+                        // Get maatoo id of parent product
+                        $parameters['productParent'] = (int)$parentMaatooData['maatoo_id'];
+                    }
+
+                    if (empty($sync->getStatus()) || $sync->getStatus() == SyncInterface::STATUS_EMPTY) {
+                        $parameters['id'] = $product->getId();
+                        $productsDataToCreate[$parameters['externalProductId']] = $parameters;
+                        $syncDataToCreate[$parameters['externalProductId']] = $sync;
+                    } elseif ($sync->getStatus() == SyncInterface::STATUS_UPDATED) {
+                        $parameters['id'] = $sync->getMaatooId();
+                        $productsDataToUpdate[$parameters['externalProductId']] = $parameters;
+                        $syncDataToUpdate[$parameters['externalProductId']] = $sync;
+                    }
                 }
 
-                if (empty($sync->getStatus()) || $sync->getStatus() == SyncInterface::STATUS_EMPTY) {
-                    $parameters['id'] = $product->getId();
-                    $productsDataToCreate[$parameters['id']] = $parameters;
-                    $syncDataToCreate[$parameters['id']] = $sync;
-                } elseif ($sync->getStatus() == SyncInterface::STATUS_UPDATED) {
-                    $parameters['id'] = $sync->getMaatooId();
-                    $productsDataToUpdate[$parameters['id']] = $parameters;
-                    $syncDataToUpdate[$parameters['id']] = $sync;
-                }
+                // Create products via batch
+                $this->executesCreateProductsRequest($productsDataToCreate, $syncDataToCreate, $cl);
+
+                // Update products via batch
+                $this->executesUpdateProductsRequests($productsDataToUpdate, $syncDataToUpdate, $cl);
             }
-
-            // Create products via batch
-            $this->executesCreateProductsRequest($productsDataToCreate, $syncDataToCreate, $cl);
-
-            // Update products via batch
-            $this->executesUpdateProductsRequests($productsDataToUpdate, $syncDataToUpdate, $cl);
 
             // Delete entities
             $this->executesDeleteProductsRequests($storeId, $cl);
@@ -347,15 +358,16 @@ class ProductSyncService implements SyncServiceInterface
         ) ?? null;
 
         if (isset($result['products'])) {
-            foreach ($result['products'] as $maatooId => $productData) {
-                $syncData = $productsSyncData[$maatooId] ?? [];
+            foreach ($result['products'] as $productData) {
+                $productId = $productData['externalProductId'];
+                $syncData = $productsSyncData[$productId] ?? [];
 
                 if (!$syncData) {
                     continue;
                 }
 
-                $entityId = $syncData->getEntityId() ?: $productsListData[$maatooId]['id'] ?? 0;
-                $storeId = $syncData->getStoreId() ?: $productsListData[$maatooId]['store'] ?? 0;
+                $entityId = $syncData->getEntityId() ?: $productsListData[$productId]['id'] ?? 0;
+                $storeId = $syncData->getStoreId() ?: $productsListData[$productId]['store'] ?? 0;
 
                 if (!$entityId || !$storeId) {
                     continue;
@@ -389,9 +401,7 @@ class ProductSyncService implements SyncServiceInterface
 
                 $this->logSyncResponseData(
                     sprintf(
-                        'An error occurred while sending the product #%s %s data in maatoo: %s',
-                        $syncData['externalProductId'] ?? '',
-                        $syncData['title'] ?? '',
+                        'An error occurred while sending the products data in maatoo: %s',
                         $errorData['message'] ?? ''
                     ),
                     $cl
