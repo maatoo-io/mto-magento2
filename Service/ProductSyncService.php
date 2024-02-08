@@ -35,7 +35,7 @@ class ProductSyncService implements SyncServiceInterface
     private $logger;
 
     /**
-     * @var CategorySyncService
+     * @var \Maatoo\Maatoo\Service\CategorySyncService
      */
     private $syncCategory;
 
@@ -154,6 +154,19 @@ class ProductSyncService implements SyncServiceInterface
 
             $collection = $this->collectionFactory->create();
             $collection->addStoreFilter($store);
+            $collection->getSelect()
+                ->joinLeft(
+                    ['sync' => $collection->getTable('maatoo_sync')],
+                    sprintf(
+                        "(e.entity_id = sync.entity_id) AND (sync.entity_type=\"%s\") AND (sync.store_id=\"%s\")",
+                        SyncInterface::TYPE_PRODUCT,
+                        $storeId
+                    )
+                )->where(
+                    'sync.status <> ?', SyncInterface::STATUS_SYNCHRONIZED
+                )->orWhere('sync.status is null')
+            ->columns(['entity_id' => 'e.entity_id']);
+
             $numberOfBatches = ceil($collection->getSize() / SyncServiceInterface::OPERATION_SIZE_LIMIT);
 
             for ($batchId = 0; $batchId < $numberOfBatches; $batchId++) {
@@ -199,6 +212,8 @@ class ProductSyncService implements SyncServiceInterface
                     if (!$parameters) {
                         continue;
                     }
+
+                    $parameters['localStoreId'] = $storeId;
 
                     // Price
                     $priceData = $this->productSyncHelper->getPreparedPriceData($product);
@@ -367,7 +382,7 @@ class ProductSyncService implements SyncServiceInterface
                 }
 
                 $entityId = $syncData->getEntityId() ?: $productsListData[$productId]['id'] ?? 0;
-                $storeId = $syncData->getStoreId() ?: $productsListData[$productId]['store'] ?? 0;
+                $storeId = $productsListData[$productId]['localStoreId'] ?? 0;
 
                 if (!$entityId || !$storeId) {
                     continue;
