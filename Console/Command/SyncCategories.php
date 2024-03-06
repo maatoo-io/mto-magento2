@@ -3,30 +3,31 @@ declare(strict_types=1);
 
 namespace Maatoo\Maatoo\Console\Command;
 
-use Exception;
+use Maatoo\Maatoo\Service\CategorySyncService;
 use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Maatoo\Maatoo\Model\Synchronization\Category;
 
 class SyncCategories extends Command
 {
     use LockableTrait;
 
     /**
-     * @var Category
+     * @var CategorySyncService
      */
     private $sync;
 
+    /**
+     * SyncCategories constructor.
+     */
     public function __construct(
-        Category $sync,
-        string $name = null
-    )
-    {
+        CategorySyncService $sync,
+        string              $name = null
+    ) {
         $this->sync = $sync;
+
         parent::__construct($name);
     }
 
@@ -36,7 +37,7 @@ class SyncCategories extends Command
     protected function configure()
     {
         $this->setName('maatoo:sync:categories')
-            ->setDescription(__('Maatoo synchronization'))
+            ->setDescription(__('Maatoo synchronization')->render())
             ->setDefinition([]);
         parent::configure();
     }

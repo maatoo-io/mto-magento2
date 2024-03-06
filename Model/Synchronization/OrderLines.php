@@ -132,7 +132,7 @@ class OrderLines
                 $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
                 continue;
             }
-            
+
             /** @var \Magento\Quote\Model\ResourceModel\Quote\Item\Collection $collection */
             $collection = $this->collectionQuoteItemFactory->create();
             $lifetime = $this->config->getOrderLifetime();
@@ -159,6 +159,8 @@ class OrderLines
                     []
                 );
             }
+
+            $select->distinct();
 
             $updatedOrderItems = [];
             $orderLines = [];
