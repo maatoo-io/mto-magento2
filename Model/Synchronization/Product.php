@@ -3,15 +3,18 @@
 namespace Maatoo\Maatoo\Model\Synchronization;
 
 use Maatoo\Maatoo\Api\Data\SyncInterface;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 
 /**
  * Class Product
+ *
  * @package Maatoo\Maatoo\Model\Synchronization
+ *
+ * @deprecated
  */
 class Product
 {
     const DOWNLOADABLE = 'downloadable';
-
     /**
      * @var \Magento\Catalog\Api\ProductRepositoryInterface
      */
@@ -52,18 +55,15 @@ class Product
      * @var \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory
      */
     private $categoryCollectionFactory;
-
     private $syncCategory;
     /**
      * @var \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable
      */
     private $configurableProductType;
-
     /**
      * @var \Magento\CatalogInventory\Api\StockRegistryInterface
      */
     protected $stockRegistry;
-
     /**
      * @var \Maatoo\Maatoo\Logger\Logger
      */
@@ -71,6 +71,7 @@ class Product
 
     /**
      * Product constructor.
+     *
      * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
      * @param \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $collectionFactory
      * @param \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory
@@ -87,23 +88,22 @@ class Product
      * @param \Maatoo\Maatoo\Logger\Logger $logger
      */
     public function __construct(
-        \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
-        \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $collectionFactory,
-        \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory,
-        \Magento\Catalog\Helper\Product $productHelper,
-        \Magento\Framework\UrlInterface $urlBilder,
-        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
-        \Maatoo\Maatoo\Model\StoreConfigManager $storeManager,
-        \Maatoo\Maatoo\Adapter\AdapterInterface $adapter,
-        \Maatoo\Maatoo\Model\StoreMap $storeMap,
-        \Maatoo\Maatoo\Model\SyncRepository $syncRepository,
-        \Maatoo\Maatoo\Model\Synchronization\Category $syncCategory,
+        \Magento\Catalog\Api\ProductRepositoryInterface                            $productRepository,
+        \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory             $collectionFactory,
+        \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory            $categoryCollectionFactory,
+        \Magento\Catalog\Helper\Product                                            $productHelper,
+        \Magento\Framework\UrlInterface                                            $urlBilder,
+        \Magento\Framework\Api\SearchCriteriaBuilder                               $searchCriteriaBuilder,
+        \Maatoo\Maatoo\Model\StoreConfigManager                                    $storeManager,
+        \Maatoo\Maatoo\Adapter\AdapterInterface                                    $adapter,
+        \Maatoo\Maatoo\Model\StoreMap                                              $storeMap,
+        \Maatoo\Maatoo\Model\SyncRepository                                        $syncRepository,
+        \Maatoo\Maatoo\Model\Synchronization\Category                              $syncCategory,
         \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable $configurableProductType,
-        \Magento\CatalogInventory\Api\StockRegistryInterface $stockRegistry,
-        \Maatoo\Maatoo\Logger\Logger $logger
+        \Magento\CatalogInventory\Api\StockRegistryInterface                       $stockRegistry,
+        \Maatoo\Maatoo\Logger\Logger                                               $logger
 
-    )
-    {
+    ) {
         $this->storeManager = $storeManager;
         $this->productRepository = $productRepository;
         $this->collectionFactory = $collectionFactory;
@@ -125,26 +125,39 @@ class Product
      */
     public function sync(\Closure $cl = null)
     {
-        $this->logger->info("Begin syncing products to maatoo.");
+        $this->logger->info('Begin syncing products to maatoo.');
         $this->syncCategory->sync($cl);
 
         $parameters = [];
-        $categoryMaatoo = $this->adapter->makeRequest('product-categories', $parameters, 'GET');
+        $categoryMaatoo = $this->adapter->makeRequest('product-categories', $parameters);
+
         if (empty($categoryMaatoo['total'])) {
             $this->logger->warning('Before loading products you must load product categories');
+
             if (is_callable($cl)) {
                 $cl('Before loading products you must load product categories');
             }
+
             return;
         }
 
         foreach ($this->storeManager->getStores() as $store) {
-            if (empty($this->storeMap->getStoreToMaatoo($store->getId())) || $this->storeMap->getStoreToMaatoo($store->getId()) === "") {
-                $this->logger->warning("store #" . $store->getId() . " not synced to maatoo yet.");
+            if (
+                empty($this->storeMap->getStoreToMaatoo($store->getId())) ||
+                $this->storeMap->getStoreToMaatoo($store->getId()) === ''
+            ) {
+                $this->logger->warning(sprintf('store #%s not synced to maatoo yet.', $store->getId()));
                 continue;
             }
 
-            $this->logger->info("Begin syncing products to maatoo for store: " . $store->getName() . " (#" . $store->getId() . ")");
+            $this->logger->info(
+                sprintf(
+                    'Begin syncing products to maatoo for store: %s (#%s)',
+                    $store->getName(),
+                    $store->getId()
+                )
+            );
+
             $collection = $this->collectionFactory->create();
             $collection->addStoreFilter($store);
 
@@ -154,9 +167,9 @@ class Product
 
                 /** @var \Maatoo\Maatoo\Model\Sync $sync */
                 $sync = $this->syncRepository->getByParam([
-                    'entity_id' => $product->getId(),
+                    'entity_id'   => $product->getId(),
                     'entity_type' => SyncInterface::TYPE_PRODUCT,
-                    'store_id' => $store->getId(),
+                    'store_id'    => $store->getId(),
                 ]);
 
                 if ($sync->getData('status') == SyncInterface::STATUS_SYNCHRONIZED) {
@@ -165,7 +178,7 @@ class Product
 
                 // Get children products
                 $productChildren = [];
-                if($product->getTypeId() === \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
+                if ($product->getTypeId() === Configurable::TYPE_CODE) {
                     $childProducts = $product->getTypeInstance()->getChildrenIds($product->getId());
                     if (count($childProducts[0])) {
                         foreach ($childProducts[0] as $childId) {
@@ -176,7 +189,6 @@ class Product
 
                 // Get parent product
                 $parent = $this->getParent($product->getId(), $store->getId());
-
 
                 $categoryIds = $product->getCategoryIds();
 
@@ -198,9 +210,10 @@ class Product
                 }
 
                 $maatooSyncCategoryRow = $this->syncRepository->getRow([
-                    'entity_id' => $categoryId,
+                    'entity_id'   => $categoryId,
                     'entity_type' => SyncInterface::TYPE_CATEGORY,
-                    'store_id' => $store->getId()]);
+                    'store_id'    => $store->getId(),
+                ]);
 
                 if (!isset($maatooSyncCategoryRow['maatoo_id'])) {
                     continue;
@@ -209,14 +222,14 @@ class Product
                 $maatooCategoryId = $maatooSyncCategoryRow['maatoo_id'];
 
                 $parameters = [
-                    'store' => $this->storeMap->getStoreToMaatoo($store->getId()),
-                    "category" => $categoryIds[0],
-                    "externalProductId" => $product->getId(),
-                    "title" => $product->getName(),
-                    "description" => $product->getDescription(),
-                    "sku" => $product->getSku(),
-                    "productCategory" => $maatooCategoryId,
-                    "externalDatePublished" => $product->getCreatedAt()
+                    'store'                 => $this->storeMap->getStoreToMaatoo($store->getId()),
+                    "category"              => $categoryIds[0],
+                    "externalProductId"     => $product->getId(),
+                    "title"                 => $product->getName(),
+                    "description"           => $product->getDescription(),
+                    "sku"                   => $product->getSku(),
+                    "productCategory"       => $maatooCategoryId,
+                    "externalDatePublished" => $product->getCreatedAt(),
                 ];
 
                 // Price
@@ -258,25 +271,25 @@ class Product
                 }
 
                 // Image
-                if ($product->getImage() && $product->getImage()!='no_selection') {
-                    $filePath = 'catalog/product/'.ltrim($product->getImage(), '/');
+                if ($product->getImage() && $product->getImage() != 'no_selection') {
+                    $filePath = 'catalog/product/' . ltrim($product->getImage(), '/');
                     $parameters["imageUrl"] = $this->getBaseUrl(
                             $store->getId(),
                             \Magento\Framework\UrlInterface::URL_TYPE_MEDIA
-                        ).$filePath;
-                } elseif ($product->getSmallImage() && $product->getSmallImage() !='no_selection') {
-                    $filePath = 'catalog/product/'.ltrim($product->getSmallImage(), '/');
+                        ) . $filePath;
+                } elseif ($product->getSmallImage() && $product->getSmallImage() != 'no_selection') {
+                    $filePath = 'catalog/product/' . ltrim($product->getSmallImage(), '/');
                     $parameters["imageUrl"] = $this->getBaseUrl(
                             $store->getId(),
                             \Magento\Framework\UrlInterface::URL_TYPE_MEDIA
-                        ).$filePath;
+                        ) . $filePath;
                 } else {
-                    if ($parent && $parent->getImage() && $parent->getImage()!='no_selection') {
-                        $filePath = 'catalog/product/'.ltrim($parent->getImage(), '/');
+                    if ($parent && $parent->getImage() && $parent->getImage() != 'no_selection') {
+                        $filePath = 'catalog/product/' . ltrim($parent->getImage(), '/');
                         $parameters["imageUrl"] = $this->getBaseUrl(
                                 $store->getId(),
                                 \Magento\Framework\UrlInterface::URL_TYPE_MEDIA
-                            ).$filePath;
+                            ) . $filePath;
                     }
                 }
 
@@ -298,7 +311,10 @@ class Product
 
                 // Visibility
                 $parameters["isVisible"] = true;
-                if ($product->getVisibility() == \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE || $product->getStatus() == \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED) {
+                if (
+                    $product->getVisibility() == \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE ||
+                    $product->getStatus() == \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED
+                ) {
                     $parameters["isVisible"] = false;
                 }
 
@@ -308,11 +324,11 @@ class Product
                 $parameters["backorders"] = $stock->getBackorders();
 
                 // Handle children of configurable products
-                if($parent) {
+                if ($parent) {
                     $maatooSyncParentProductRow = $this->syncRepository->getRow([
-                        'entity_id' => $parent->getId(),
+                        'entity_id'   => $parent->getId(),
                         'entity_type' => SyncInterface::TYPE_PRODUCT,
-                        'store_id' => $store->getId()
+                        'store_id'    => $store->getId(),
                     ]);
 
                     if (empty($maatooSyncParentProductRow['maatoo_id'])) {
@@ -327,13 +343,30 @@ class Product
 
                 if (empty($sync->getData('status')) || $sync->getData('status') == SyncInterface::STATUS_EMPTY) {
                     $result = $this->adapter->makeRequest('products/new', $parameters, 'POST');
-                    $this->logger->info('Added product #' . $product->getId() . ' ' . $product->getName() . ' to maatoo');
+                    $this->logger->info(
+                        'Added product #' .
+                        $product->getId() .
+                        ' ' .
+                        $product->getName() .
+                        ' to maatoo'
+                    );
                     if (is_callable($cl)) {
                         $cl('Added product #' . $product->getId() . ' ' . $product->getName() . ' to maatoo');
                     }
                 } elseif ($sync->getData('status') == SyncInterface::STATUS_UPDATED) {
-                    $result = $this->adapter->makeRequest('products/' . $sync->getData('maatoo_id') . '/edit', $parameters, 'PATCH');
-                    $this->logger->info('Updated product #' . $product->getId() . ' ' . $product->getName() . ' in maatoo');
+                    $result = $this->adapter->makeRequest(
+                        sprintf(
+                            'products/%s/edit',
+                            $sync->getData('maatoo_id')
+                        ), $parameters, 'PATCH'
+                    );
+                    $this->logger->info(
+                        'Updated product #' .
+                        $product->getId() .
+                        ' ' .
+                        $product->getName() .
+                        ' in maatoo'
+                    );
                     if (is_callable($cl)) {
                         $cl('Updated product #' . $product->getId() . ' ' . $product->getName() . ' in maatoo');
                     }
@@ -362,8 +395,9 @@ class Product
             $this->searchCriteriaBuilder->addFilter('store_id', $store->getId());
             $searchCriteria = $this->searchCriteriaBuilder->create();
             $collectionForDelete = $this->syncRepository->getList($searchCriteria);
+
             foreach ($collectionForDelete as $item) {
-                $result = $this->adapter->makeRequest('products/' . $item->getMaatooId() . '/delete', [], 'DELETE');
+                $this->adapter->makeRequest('products/' . $item->getMaatooId() . '/delete', [], 'DELETE');
                 $this->logger->info('Deleted product in maatoo with id #' . $item->getMaatooId());
                 if (is_callable($cl)) {
                     $cl('Deleted product #' . $item->getMaatooId() . ' in maatoo');
@@ -372,7 +406,8 @@ class Product
                 $this->syncRepository->delete($item);
             }
         }
-        $this->logger->info("Finished syncing products to maatoo.");
+
+        $this->logger->info('Finished syncing products to maatoo.');
     }
 
     protected function getBaseUrl($storeId, $type)
@@ -387,12 +422,13 @@ class Product
         $parent = null;
         foreach ($parentIds as $id) {
             $parent = $this->productRepository->getById($id, false, $storeId);
-            if ($parent->getTypeId() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
+            if ($parent->getTypeId() == Configurable::TYPE_CODE) {
                 break;
             } else {
                 $parent = null;
             }
         }
+
         return $parent;
     }
 }

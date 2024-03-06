@@ -43,7 +43,7 @@ class SyncOrdersAll extends Command
     protected function configure()
     {
         $this->setName(self::NAME)
-            ->setDescription(__('Maatoo synchronization'))
+            ->setDescription(__('Maatoo synchronization')->render())
             ->setDefinition([]);
         parent::configure();
     }
@@ -61,6 +61,8 @@ class SyncOrdersAll extends Command
             [$this, 'generate'],
             [$input, $output]
         );
+
+        return Cli::RETURN_SUCCESS;
     }
 
     /**
