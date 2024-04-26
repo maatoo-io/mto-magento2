@@ -3,9 +3,10 @@ declare(strict_types=1);
 
 namespace Maatoo\Maatoo\Console\Command;
 
-use Exception;
 use Maatoo\Maatoo\Model\Synchronization\OrderAll;
 use Maatoo\Maatoo\Model\Synchronization\OrderLinesAll;
+use Maatoo\Maatoo\Service\CategorySyncService;
+use Maatoo\Maatoo\Service\ProductSyncService;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\App\State;
 use Magento\Framework\App\Area;
@@ -16,8 +17,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Maatoo\Maatoo\Model\Synchronization\Store;
-use Maatoo\Maatoo\Model\Synchronization\Category;
-use Maatoo\Maatoo\Model\Synchronization\Product;
 use Maatoo\Maatoo\Model\Synchronization\Order;
 use Maatoo\Maatoo\Model\Synchronization\OrderLines;
 
@@ -30,11 +29,11 @@ class MaatooSynchronization extends Command
      */
     private $store;
     /**
-     * @var Category
+     * @var CategorySyncService
      */
     private $category;
     /**
-     * @var Product
+     * @var ProductSyncService
      */
     private $product;
     /**
@@ -64,8 +63,8 @@ class MaatooSynchronization extends Command
 
     public function __construct(
         Store $store,
-        Category $category,
-        Product $product,
+        CategorySyncService $category,
+        ProductSyncService $product,
         Order $order,
         OrderAll $orderAll,
         OrderLines $orderLines,

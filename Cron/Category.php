@@ -3,19 +3,28 @@ declare(strict_types=1);
 
 namespace Maatoo\Maatoo\Cron;
 
+use Maatoo\Maatoo\Logger\Logger;
+use Maatoo\Maatoo\Service\CategorySyncService;
+
 class Category
 {
-    protected $logger;
     /**
-     * @var \Maatoo\Maatoo\Model\Synchronization\Category
+     * @var Logger
+     */
+    protected $logger;
+
+    /**
+     * @var CategorySyncService
      */
     private $category;
 
+    /**
+     * Category constructor.
+     */
     public function __construct(
-        \Maatoo\Maatoo\Logger\Logger $logger,
-        \Maatoo\Maatoo\Model\Synchronization\Category $category
-    )
-    {
+        Logger $logger,
+        CategorySyncService $category
+    ) {
         $this->logger = $logger;
         $this->category = $category;
     }
@@ -27,8 +36,7 @@ class Category
      */
     public function execute()
     {
-        $this->logger->info("Cronjob maatoo categories is executed.");
+        $this->logger->info('Cronjob maatoo categories is executed.');
         $this->category->sync();
     }
 }
-
