@@ -7,7 +7,10 @@ use Magento\Catalog\Api\CategoryRepositoryInterface;
 
 /**
  * Class Category
+ *
  * @package Maatoo\Maatoo\Model\Synchronization
+ *
+ * @deprecated
  */
 class Category
 {

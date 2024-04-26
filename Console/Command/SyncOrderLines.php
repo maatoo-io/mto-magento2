@@ -43,7 +43,7 @@ class SyncOrderLines extends Command
     protected function configure()
     {
         $this->setName('maatoo:sync:order_lines')
-            ->setDescription(__('Maatoo synchronization'))
+            ->setDescription(__('Maatoo synchronization')->render())
             ->setDefinition([]);
         parent::configure();
     }
@@ -61,6 +61,8 @@ class SyncOrderLines extends Command
             [$this, 'generate'],
             [$input, $output]
         );
+
+        return Cli::RETURN_SUCCESS;
     }
 
     /**

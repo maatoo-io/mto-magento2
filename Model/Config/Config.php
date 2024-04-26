@@ -83,8 +83,7 @@ class Config
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig
-    )
-    {
+    ) {
         $this->scopeConfig = $scopeConfig;
         $this->scopeStore = ScopeInterface::SCOPE_STORE;
     }
@@ -95,6 +94,7 @@ class Config
     public function isModuleEnable(): bool
     {
         $_matoUrl = $this->getMaatooUrl();
+
         return $this->scopeConfig->isSetFlag(self::MAATOO_MODULE_ENABLE, $this->scopeStore) && !empty($_matoUrl);
     }
 
@@ -103,10 +103,12 @@ class Config
      */
     public function getMaatooUrl(): string
     {
-        $url = $this->scopeConfig->getValue(self::MAATOO_URL_PATH, $this->scopeStore);
+        $url = (string)$this->scopeConfig->getValue(self::MAATOO_URL_PATH, $this->scopeStore);
+
         if (substr($url, -1) != '/') {
             $url = $url . '/';
         }
+
         return $url;
     }
 
@@ -115,7 +117,7 @@ class Config
      */
     public function getMaatooUser(): string
     {
-        return $this->scopeConfig->getValue(self::MAATOO_USER_PATH, $this->scopeStore);
+        return (string)$this->scopeConfig->getValue(self::MAATOO_USER_PATH, $this->scopeStore);
     }
 
     /**
@@ -123,7 +125,7 @@ class Config
      */
     public function getMaatooPassword(): string
     {
-        return $this->scopeConfig->getValue(self::MAATOO_PASSWORD_PATH, $this->scopeStore);
+        return (string)$this->scopeConfig->getValue(self::MAATOO_PASSWORD_PATH, $this->scopeStore);
     }
 
     /**
@@ -146,6 +148,7 @@ class Config
             $url = str_replace('www.', '', $url);
             $explode = explode('.', $url);
             $workspacename = $explode[0];
+
             return (string)$workspacename;
         }
         return '';
@@ -233,6 +236,5 @@ class Config
             $websiteId
         );
     }
-
 
 }
