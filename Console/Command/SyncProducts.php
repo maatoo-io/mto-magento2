@@ -42,6 +42,7 @@ class SyncProducts extends Command
      */
     protected function configure()
     {
+
         $this->setName('maatoo:sync:products');
         $this->setDescription(__('Maatoo synchronization')->render());
         $this->setDefinition([]);
