@@ -7,12 +7,12 @@ use Maatoo\Maatoo\Api\Data\SyncInterface;
 use Maatoo\Maatoo\Api\Data\SyncServiceInterface;
 use Maatoo\Maatoo\Helper\Synchronisation\ProductSyncHelper;
 use Maatoo\Maatoo\Logger\Logger;
+use Maatoo\Maatoo\Model\Config\Config;
 use Maatoo\Maatoo\Model\StoreConfigManager;
 use Maatoo\Maatoo\Model\StoreMap;
 use Maatoo\Maatoo\Model\Sync;
 use Maatoo\Maatoo\Model\SyncRepository;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
@@ -85,6 +85,11 @@ class ProductSyncService implements SyncServiceInterface
     private $stockRegistry;
 
     /**
+     * @var Config
+     */
+    private $config;
+
+    /**
      * ProductSyncService constructor.
      */
     public function __construct(
@@ -98,7 +103,8 @@ class ProductSyncService implements SyncServiceInterface
         CategorySyncService        $syncCategory,
         StockRegistryInterface     $stockRegistry,
         Logger                     $logger,
-        ProductSyncHelper          $productSyncHelper
+        ProductSyncHelper          $productSyncHelper,
+        Config                     $config
     ) {
         $this->storeManager = $storeManager;
         $this->productRepository = $productRepository;
@@ -111,6 +117,7 @@ class ProductSyncService implements SyncServiceInterface
         $this->stockRegistry = $stockRegistry;
         $this->logger = $logger;
         $this->productSyncHelper = $productSyncHelper;
+        $this->config = $config;
     }
 
     /**
@@ -344,9 +351,11 @@ class ProductSyncService implements SyncServiceInterface
     /**
      * Logs a message using the logger and optionally executes a closure function with the message as an argument.
      */
-    private function logSyncResponseData(string $format, ?\Closure $cl = null): void
+    private function logSyncResponseData(string $format, ?\Closure $cl = null, $isDebugMode = false): void
     {
+        if ($isDebugMode) {
         $this->logger->info($format);
+        }
 
         if (is_callable($cl)) {
             $cl($format);
@@ -373,6 +382,8 @@ class ProductSyncService implements SyncServiceInterface
         ) ?? null;
 
         if (isset($result['products'])) {
+            $isDebugMode = $this->config->isDebugEnabled();
+
             foreach ($result['products'] as $productData) {
                 $productId = $productData['externalProductId'];
                 $syncData = $productsSyncData[$productId] ?? [];
@@ -401,7 +412,8 @@ class ProductSyncService implements SyncServiceInterface
                         $syncData->getEntityId(),
                         $productData['title'] ?? ''
                     ),
-                    $cl
+                    $cl,
+                    $isDebugMode
                 );
             }
         }
