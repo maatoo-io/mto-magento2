@@ -6,6 +6,7 @@ use Maatoo\Maatoo\Adapter\AdapterInterface;
 use Maatoo\Maatoo\Api\Data\SyncInterface;
 use Maatoo\Maatoo\Api\Data\SyncServiceInterface;
 use Maatoo\Maatoo\Logger\Logger;
+use Maatoo\Maatoo\Model\Config\Config;
 use Maatoo\Maatoo\Model\StoreConfigManager;
 use Maatoo\Maatoo\Model\StoreMap;
 use Maatoo\Maatoo\Model\SyncRepository;
@@ -72,6 +73,10 @@ class CategorySyncService
      * @var Logger
      */
     private $logger;
+    /**
+     * @var Config
+     */
+    private $config;
 
     /**
      * CategorySyncService constructor.
@@ -85,6 +90,7 @@ class CategorySyncService
      * @param StoreMap $storeMap
      * @param SyncRepository $syncRepository
      * @param Logger $logger
+     * @param Config $config
      */
     public function __construct(
         StoreConfigManager          $storeManager,
@@ -95,7 +101,8 @@ class CategorySyncService
         AdapterInterface            $adapter,
         StoreMap                    $storeMap,
         SyncRepository              $syncRepository,
-        Logger                      $logger
+        Logger                      $logger,
+        Config                      $config
     ) {
         $this->storeManager = $storeManager;
         $this->collectionFactory = $collectionFactory;
@@ -106,6 +113,7 @@ class CategorySyncService
         $this->syncRepository = $syncRepository;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->logger = $logger;
+        $this->config = $config;
     }
 
     /**
@@ -233,7 +241,7 @@ class CategorySyncService
         );
 
         foreach ($categoriesDataToCreateList as $categoriesList) {
-            $this->processProductsRequest(
+            $this->processCategoriesRequest(
                 'product-categories/batch/new',
                 'POST',
                 $categoriesList,
@@ -254,7 +262,7 @@ class CategorySyncService
         $categoriesDataToUpdateList = array_chunk($categoriesDataToUpdate, SyncServiceInterface::BATCH_SIZE_LIMIT, true);
 
         foreach ($categoriesDataToUpdateList as $categoriesList) {
-            $this->processProductsRequest(
+            $this->processCategoriesRequest(
                 'product-categories/batch/edit',
                 'PATCH',
                 $categoriesList,
@@ -267,7 +275,7 @@ class CategorySyncService
     /**
      * Processes a request for categories, updates the sync data for each category, and logs any errors that occur.
      */
-    private function processProductsRequest(
+    private function processCategoriesRequest(
         string    $endpoint,
         string    $method,
         array     $categoriesListData,
@@ -281,6 +289,8 @@ class CategorySyncService
         ) ?? null;
 
         if (isset($result['categories'])) {
+            $isDebugMode = $this->config->isDebugEnabled();
+
             foreach ($result['categories'] as $categoryData) {
                 $syncData = $categoriesListData[$categoryData['externalCategoryId']] ?? [];
 
@@ -296,7 +306,8 @@ class CategorySyncService
                         $categoryData['externalCategoryId'] ?? '',
                         $categoryData['name'] ?? ''
                     ),
-                    $cl
+                    $cl,
+                    $isDebugMode
                 );
             }
         }
@@ -370,9 +381,11 @@ class CategorySyncService
     /**
      * Logs a message using the logger and optionally executes a closure function with the message as an argument.
      */
-    private function logSyncResponseData(string $format, ?\Closure $cl = null): void
+    private function logSyncResponseData(string $format, ?\Closure $cl = null, $isDebugMode = false): void
     {
-        $this->logger->info($format);
+        if ($isDebugMode) {
+            $this->logger->info($format);
+        }
 
         if (is_callable($cl)) {
             $cl($format);
