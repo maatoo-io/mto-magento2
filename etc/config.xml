@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
         <maatoo>
             <general>
@@ -21,6 +20,15 @@
             <newsletter>
                 <disable_newsletter_email>1</disable_newsletter_email>
             </newsletter>
+            <scheduling>
+                <stores_import_cron_schedule>*/5 * * * *</stores_import_cron_schedule>
+                <categories_import_cron_schedule>0 */8 * * *</categories_import_cron_schedule>
+                <products_import_cron_schedule>*/5 * * * *</products_import_cron_schedule>
+                <orders_import_cron_schedule>*/5 * * * *</orders_import_cron_schedule>
+                <all_orders_import_cron_schedule>*/10 * * * *</all_orders_import_cron_schedule>
+                <order_lines_import_cron_schedule>*/10 * * * *</order_lines_import_cron_schedule>
+                <all_order_lines_import_cron_schedule>*/15 * * * *</all_order_lines_import_cron_schedule>
+            </scheduling>
         </maatoo>
         <csp>
             <policies>

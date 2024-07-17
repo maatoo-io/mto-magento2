@@ -2,25 +2,25 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
 	<group id="maatoo">
         <job name="maatoo_cron_store" instance="Maatoo\Maatoo\Cron\Store" method="execute">
-            <schedule>*/5 * * * *</schedule>
+            <config_path>maatoo/scheduling/stores_import_cron_schedule</config_path>
         </job>
         <job name="maatoo_cron_category" instance="Maatoo\Maatoo\Cron\Category" method="execute">
-            <schedule>0 */8 * * *</schedule>
+            <config_path>maatoo/scheduling/categories_import_cron_schedule</config_path>
         </job>
         <job name="maatoo_cron_product" instance="Maatoo\Maatoo\Cron\Product" method="execute">
-            <schedule>*/5 * * * *</schedule>
+            <config_path>maatoo/scheduling/products_import_cron_schedule</config_path>
         </job>
         <job name="maatoo_cron_order" instance="Maatoo\Maatoo\Cron\Order" method="execute">
-            <schedule>*/5 * * * *</schedule>
+            <config_path>maatoo/scheduling/orders_import_cron_schedule</config_path>
         </job>
         <job name="maatoo_cron_order_all" instance="Maatoo\Maatoo\Cron\OrderAll" method="execute">
-            <schedule>*/10 * * * *</schedule>
+            <config_path>maatoo/scheduling/all_orders_import_cron_schedule</config_path>
         </job>
         <job name="maatoo_cron_order_lines" instance="Maatoo\Maatoo\Cron\OrderLines" method="execute">
-            <schedule>*/10 * * * *</schedule>
+            <config_path>maatoo/scheduling/order_lines_import_cron_schedule</config_path>
         </job>
         <job name="maatoo_cron_order_lines_all" instance="Maatoo\Maatoo\Cron\OrderLinesAll" method="execute">
-            <schedule>*/15 * * * *</schedule>
+            <config_path>maatoo/scheduling/all_order_lines_import_cron_schedule</config_path>
         </job>
 	</group>
 </config>
