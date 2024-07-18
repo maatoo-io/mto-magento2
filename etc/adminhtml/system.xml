@@ -83,6 +83,30 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
+            <group id="scheduling" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Scheduling</label>
+                <field id="stores_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Stores import cron schedule</label>
+                </field>
+                <field id="categories_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Categories import cron schedule</label>
+                </field>
+                <field id="products_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Products import cron schedule</label>
+                </field>
+                <field id="orders_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Orders import cron schedule</label>
+                </field>
+                <field id="all_orders_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>All Orders import cron schedule</label>
+                </field>
+                <field id="order_lines_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Order lines import cron schedule</label>
+                </field>
+                <field id="all_order_lines_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>All Order lines import cron schedule</label>
+                </field>
+            </group>
         </section>
     </system>
 </config>
