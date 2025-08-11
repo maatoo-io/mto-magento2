@@ -12,6 +12,7 @@ use Maatoo\Maatoo\Model\Sync;
 use Maatoo\Maatoo\Model\Synchronization\Order;
 use Maatoo\Maatoo\Model\SyncRepository;
 use Maatoo\Maatoo\Model\StoreConfigManager;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Serialize;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -132,10 +133,11 @@ class SyncOrdersAfterPlace
      *
      * @return OrderInterface
      * @throws NoSuchEntityException
+     * @throws LocalizedException
      */
     public function afterPlace($subject, OrderInterface $order): OrderInterface
     {
-        if (!$this->config->isAllowedBirthdayInCheckout()) {
+        if (!$this->config->isAllowedBirthdayInCheckout($this->storeManager->getWebsite()->getId())) {
             return $order;
         }
 
