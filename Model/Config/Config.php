@@ -3,7 +3,10 @@
 namespace Maatoo\Maatoo\Model\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class Config
 {
@@ -16,6 +19,16 @@ class Config
      * @var ScopeInterface
      */
     private $scopeStore;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * @var XML path of Enable module
@@ -78,163 +91,221 @@ class Config
     const MAATOO_NEWSLETTER_CONFIRMATION_EMAIL = 'maatoo/newsletter/disable_newsletter_email';
 
     /**
-     * Background constructor
+     * Config constructor
+     *
      * @param ScopeConfigInterface $scopeConfig
+     * @param StoreManagerInterface $storeManager
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        StoreManagerInterface $storeManager,
+        LoggerInterface $logger
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->scopeStore = ScopeInterface::SCOPE_STORE;
+        $this->storeManager = $storeManager;
+        $this->logger = $logger;
     }
 
     /**
-     * @return bool
+     * Checks if module is enabled and Maatoo URL is set
      */
-    public function isModuleEnable(): bool
+    public function isModuleEnable(?int $websiteId = null): bool
     {
-        $_matoUrl = $this->getMaatooUrl();
+        $url = $this->getMaatooUrl($websiteId);
 
-        return $this->scopeConfig->isSetFlag(self::MAATOO_MODULE_ENABLE, $this->scopeStore) && !empty($_matoUrl);
+        return $this->scopeConfig->isSetFlag(
+                self::MAATOO_MODULE_ENABLE,
+                ScopeInterface::SCOPE_WEBSITES,
+                $this->getScopeCode($websiteId)
+            ) && !empty($url);
     }
 
     /**
-     * @return string
+     * Returns the Maatoo base URL with trailing slash
      */
-    public function getMaatooUrl(): string
+    public function getMaatooUrl(?int $websiteId = null): string
     {
-        $url = (string)$this->scopeConfig->getValue(self::MAATOO_URL_PATH, $this->scopeStore);
+        $url = (string)$this->scopeConfig->getValue(
+            self::MAATOO_URL_PATH,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
 
-        if (substr($url, -1) != '/') {
-            $url = $url . '/';
-        }
-
-        return $url;
+        return rtrim($url, '/') . '/';
     }
 
     /**
-     * @return string
+     * Returns the Maatoo username
      */
-    public function getMaatooUser(): string
+    public function getMaatooUser(?int $websiteId = null): string
     {
-        return (string)$this->scopeConfig->getValue(self::MAATOO_USER_PATH, $this->scopeStore);
+        return (string)$this->scopeConfig->getValue(
+            self::MAATOO_USER_PATH,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
     }
 
     /**
-     * @return string
+     * Returns the Maatoo password
      */
-    public function getMaatooPassword(): string
+    public function getMaatooPassword(?int $websiteId = null): string
     {
-        return (string)$this->scopeConfig->getValue(self::MAATOO_PASSWORD_PATH, $this->scopeStore);
+        return (string)$this->scopeConfig->getValue(
+            self::MAATOO_PASSWORD_PATH,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
     }
 
     /**
-     * Get if the log is enabled for connector.
-     *
-     * @return bool
+     * Checks if debug logging is enabled
      */
-    public function isDebugEnabled()
+    public function isDebugEnabled(?int $websiteId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(self::MAATOO_DEBUG_ENABLED, $this->scopeStore);
+        return $this->scopeConfig->isSetFlag(
+            self::MAATOO_DEBUG_ENABLED,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
     }
 
     /**
-     * @return string
+     * Gets workspace name extracted from Maatoo URL
      */
-    public function getWorkspaceName()
+    public function getWorkspaceName(?int $websiteId = null): string
     {
-        $url = parse_url($this->getMaatooUrl(), PHP_URL_HOST);
+        $url = parse_url($this->getMaatooUrl($websiteId), PHP_URL_HOST);
+
         if (!empty($url)) {
             $url = str_replace('www.', '', $url);
             $explode = explode('.', $url);
-            $workspacename = $explode[0];
 
-            return (string)$workspacename;
+            return $explode[0] ?? '';
         }
+
         return '';
     }
 
     /**
-     * @return string
+     * Returns order lifetime setting
      */
-    public function getOrderLifetime()
+    public function getOrderLifetime(?int $websiteId = null): string
     {
-        return $this->scopeConfig->getValue(self::MAATOO_ORDER_LIFETIME, $this->scopeStore);
+        return (string)$this->scopeConfig->getValue(
+            self::MAATOO_ORDER_LIFETIME,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
     }
 
     /**
-     * @return string
+     * Returns opt-in value
      */
-    public function getOptIn()
+    public function getOptIn(?int $websiteId = null): string
     {
-        return $this->scopeConfig->getValue(self::MAATOO_OPT_IN, $this->scopeStore);
+        return (string)$this->scopeConfig->getValue(
+            self::MAATOO_OPT_IN,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
     }
 
     /**
-     * @return string
+     * Returns opt-in text value
      */
-    public function getOptInText()
+    public function getOptInText(?int $websiteId = null): string
     {
-        return $this->scopeConfig->getValue(self::MAATOO_OPT_IN_TEXT, $this->scopeStore);
+        return (string)$this->scopeConfig->getValue(
+            self::MAATOO_OPT_IN_TEXT,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
     }
 
     /**
-     * @param $websiteId
-     * @return bool
+     * Checks if current website is allowed (active)
      */
-    public function isWebsiteAllowed($websiteId)
+    public function isWebsiteAllowed(?int $websiteId): bool
     {
         return $this->scopeConfig->isSetFlag(
-            \Maatoo\Maatoo\Model\Config\Config::MAATAA_WEBSITE_ACTIVE,
-            \Magento\Store\Model\ScopeInterface::SCOPE_WEBSITES,
-            $websiteId
-        );
-    }
-
-
-    /**
-     * @param $websiteId
-     * @return bool
-     */
-    public function isAllowedBirthdayInCheckout($websiteId = null)
-    {
-        return $this->scopeConfig->getValue(
-            \Maatoo\Maatoo\Model\Config\Config::MAATOO_BIRTHDAY_IN_CHECKOUT,
-            \Magento\Store\Model\ScopeInterface::SCOPE_WEBSITES
+            self::MAATAA_WEBSITE_ACTIVE,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
         );
     }
 
     /**
-     * @param $websiteId
-     * @return bool
+     * Checks if birthday input in checkout is enabled
      */
-    public function isStoreAllowed($websiteId)
+    public function isAllowedBirthdayInCheckout(?int $websiteId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
-            \Maatoo\Maatoo\Model\Config\Config::MAATOO_ALLOWED_STORE,
-            \Magento\Store\Model\ScopeInterface::SCOPE_WEBSITES,
-            $websiteId
+            self::MAATOO_BIRTHDAY_IN_CHECKOUT,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
         );
     }
 
     /**
-     * @return bool
+     * Checks if current store is allowed
      */
-    public function isNewsletterConfirmationEmailDisabled()
+    public function isStoreAllowed(?int $websiteId = null): bool
     {
-        return $this->scopeConfig->getValue(self::MAATOO_NEWSLETTER_CONFIRMATION_EMAIL, $this->scopeStore);
+        return $this->scopeConfig->isSetFlag(
+            self::MAATOO_ALLOWED_STORE,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
     }
 
     /**
+     * Checks if newsletter confirmation email is disabled
+     */
+    public function isNewsletterConfirmationEmailDisabled(?int $websiteId = null): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            self::MAATOO_NEWSLETTER_CONFIRMATION_EMAIL,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
+    }
+
+    /**
+     * Returns allowed stores value from config
+     *
      * @return mixed
      */
-    public function getAllowedStores($websiteId = null)
+    public function getAllowedStores(?int $websiteId = null)
     {
         return $this->scopeConfig->getValue(
-            \Maatoo\Maatoo\Model\Config\Config::MAATOO_ALLOWED_STORE,
-            \Magento\Store\Model\ScopeInterface::SCOPE_WEBSITES,
-            $websiteId
+            self::MAATOO_ALLOWED_STORE,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
         );
     }
 
+    /**
+     * Gets website code by ID
+     */
+    private function getScopeCode(?int $websiteId): ?string
+    {
+        if ($websiteId === null) {
+            return null;
+        }
+
+        try {
+            return $this->storeManager->getWebsite($websiteId)->getCode();
+        } catch (LocalizedException $e) {
+            $this->logger->warning(sprintf(
+                'Invalid websiteId passed to Config::getScopeCode(): %s (%s)',
+                $websiteId,
+                $e->getMessage()
+            ));
+
+            return null;
+        }
+    }
 }

@@ -14,36 +14,36 @@
             <label>maatoo Settings</label>
             <tab>maatoo_tab</tab>
             <resource>Maatoo_Maatoo::maatoo</resource>
-            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                 <label>General</label>
-                <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Enable this Solution</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="debug_enabled" translate="label" type="select" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="debug_enabled" translate="label" type="select" sortOrder="25" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Debug Mode</label>
                     <source_model>Magento\Config\Model\Config\Source\Enabledisable</source_model>
                 </field>
-                <field id="url" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="url" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Maatoo Url</label>
                 </field>
-                <field id="user" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="user" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>User</label>
                 </field>
-                <field id="password" translate="label" type="obscure" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="password" translate="label" type="obscure" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Password</label>
                     <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                 </field>
-                <field id="button_id" translate="label" type="button" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="button_id" translate="label" type="button" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Test Connection</label>
                     <button_label>Test Connection</button_label>
                     <frontend_model>Maatoo\Maatoo\Block\Adminhtml\System\Config\Button</frontend_model>
                     <comment><![CDATA[Before press button "Test connection" you need enter other settings and keep them.]]></comment>
                 </field>
             </group>
-            <group id="order" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="order" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                 <label>Order Synchronization Settings</label>
-                <field id="lifetime" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="lifetime" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Order lifetime (days)</label>
                     <comment><![CDATA[Synchronize orders not older than the specified time in days.]]></comment>
                 </field>
@@ -54,7 +54,7 @@
                     <label>Enable this Website</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="birthday_in_checkout" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="birthday_in_checkout" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Enable birthday field in checkout</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
@@ -85,25 +85,25 @@
             </group>
             <group id="scheduling" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
                 <label>Scheduling</label>
-                <field id="stores_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="stores_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Stores import cron schedule</label>
                 </field>
-                <field id="categories_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="categories_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Categories import cron schedule</label>
                 </field>
-                <field id="products_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="products_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Products import cron schedule</label>
                 </field>
-                <field id="orders_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="orders_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Orders import cron schedule</label>
                 </field>
-                <field id="all_orders_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="all_orders_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>All Orders import cron schedule</label>
                 </field>
-                <field id="order_lines_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="order_lines_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Order lines import cron schedule</label>
                 </field>
-                <field id="all_order_lines_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="all_order_lines_import_cron_schedule" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>All Order lines import cron schedule</label>
                 </field>
             </group>
