@@ -29,7 +29,7 @@ class SyncOrderLinesAll extends Command
     public function __construct(
         OrderLinesAll $sync,
         State $state,
-        string $name = null
+        ?string $name = null
     ) {
         $this->sync = $sync;
         $this->state = $state;

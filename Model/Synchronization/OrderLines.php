@@ -122,7 +122,7 @@ class OrderLines
     /**
      * @param \Closure|null $cl
      */
-    public function sync(\Closure $cl = null)
+    public function sync(?\Closure $cl = null)
     {
         $this->logger->info("Begin syncing orderlines to maatoo.");
         //$this->syncOrder->sync($cl);

@@ -30,7 +30,7 @@ class UnexpectedResponseFormatException extends AbstractApiException
     /**
      * {@inheritdoc}
      */
-    public function __construct(Response $response, $message = '', $code = 500, \Exception $previous = null)
+    public function __construct(Response $response, $message = '', $code = 500, ?\Exception $previous = null)
     {
         $this->response = $response;
 

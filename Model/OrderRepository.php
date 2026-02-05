@@ -18,7 +18,7 @@ class OrderRepository
         $this->orderResourceModel = $orderResourceModel;
     }
 
-    public function getByIncrementId(string $incrementId = null)
+    public function getByIncrementId(?string $incrementId = null)
     {
         if(empty($incrementId)) {
             return null;

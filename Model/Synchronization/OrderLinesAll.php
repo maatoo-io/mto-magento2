@@ -84,7 +84,7 @@ class OrderLinesAll
     /**
      * @param  Closure|null  $cl
      */
-    public function sync(Closure $cl = null)
+    public function sync(?Closure $cl = null)
     {
         $this->logger->info("Begin syncing all orderlines to maatoo.");
         foreach ($this->storeManager->getStores() as $store) {

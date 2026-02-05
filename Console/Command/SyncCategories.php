@@ -24,7 +24,7 @@ class SyncCategories extends Command
      */
     public function __construct(
         CategorySyncService $sync,
-        string              $name = null
+        ?string $name = null
     ) {
         $this->sync = $sync;
 

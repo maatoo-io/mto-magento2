@@ -70,7 +70,7 @@ class MaatooSynchronization extends Command
         OrderLines $orderLines,
         OrderLinesAll $orderLinesAll,
         State $state,
-        string $name = null
+        ?string $name = null
     )
     {
         parent::__construct($name);

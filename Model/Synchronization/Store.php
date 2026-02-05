@@ -52,7 +52,7 @@ class Store
     /**
      * @param \Closure|null $cl
      */
-    public function sync(\Closure $cl = null)
+    public function sync(?\Closure $cl = null)
     {
         $this->logger->info("Begin syncing stores to maatoo.");
         $parameters = [];

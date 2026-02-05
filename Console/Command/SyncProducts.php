@@ -29,7 +29,7 @@ class SyncProducts extends Command
     public function __construct(
         ProductSyncService $sync,
         State $state,
-        string $name = null
+        ?string $name = null
     ) {
         $this->sync = $sync;
         $this->state = $state;

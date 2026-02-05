@@ -122,7 +122,7 @@ class ProductSyncHelper
     public function getPreparedImageUrlData(
         ProductInterface $product,
         StoreInterface   $store,
-        ProductInterface $parent = null
+        ?ProductInterface $parent = null
     ): string {
         $imageUrl = '';
 

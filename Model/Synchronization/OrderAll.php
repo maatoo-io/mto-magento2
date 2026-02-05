@@ -85,7 +85,7 @@ class OrderAll
     /**
      * @param  \Closure|null  $cl
      */
-    public function sync(\Closure $cl = null)
+    public function sync(?\Closure $cl = null)
     {
         $this->logger->info("Begin syncing all orders to maatoo.");
         /** @var \Magento\Store\Api\Data\StoreInterface $store */

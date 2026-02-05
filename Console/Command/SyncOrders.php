@@ -30,7 +30,7 @@ class SyncOrders extends Command
     public function __construct(
         Order $sync,
         State $state,
-        string $name = null
+        ?string $name = null
     )
     {
         $this->sync = $sync;

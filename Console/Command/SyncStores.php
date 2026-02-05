@@ -24,7 +24,7 @@ class SyncStores extends Command
 
     public function __construct(
         Store $sync,
-        string $name = null
+        ?string $name = null
     )
     {
         $this->sync = $sync;

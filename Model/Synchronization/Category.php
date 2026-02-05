@@ -106,7 +106,7 @@ class Category
     /**
      * @param \Closure|null $cl
      */
-    public function sync(\Closure $cl = null)
+    public function sync(?\Closure $cl = null)
     {
         $this->logger->info("Begin syncing categories to maatoo.");
         $parameters = [];
