@@ -62,7 +62,7 @@ class GuestSavePaymentPlugin
                                                    $cartId,
                                                    $email,
         PaymentInterface                           $paymentMethod,
-        AddressInterface                           $billingAddress = null
+        ?AddressInterface                          $billingAddress = null
     ) {
         $quoteId = $this->maskedQuoteIdToQuoteId->execute($cartId);
 

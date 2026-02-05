@@ -49,7 +49,7 @@ class SavePaymentPlugin
         PaymentInformationManagementInterface $subject,
                                               $cartId,
         PaymentInterface                      $paymentMethod,
-        AddressInterface                      $billingAddress = null
+        ?AddressInterface                     $billingAddress = null
     ) {
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
         $quoteRepository = $objectManager->create('Magento\Quote\Api\CartRepositoryInterface');
