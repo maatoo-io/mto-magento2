@@ -11,6 +11,7 @@
                 <item name="maatoo_sync_all_orders" xsi:type="object">Maatoo\Maatoo\Console\Command\SyncOrdersAll</item>
                 <item name="maatoo_sync_order_lines" xsi:type="object">Maatoo\Maatoo\Console\Command\SyncOrderLines</item>
                 <item name="maatoo_sync_all_order_lines" xsi:type="object">Maatoo\Maatoo\Console\Command\SyncOrderLinesAll</item>
+                <item name="maatoo_sync_cleanup" xsi:type="object">Maatoo\Maatoo\Console\Command\SyncCleanupCommand</item>
             </argument>
         </arguments>
     </type>

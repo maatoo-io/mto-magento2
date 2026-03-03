@@ -7,6 +7,9 @@
                 <url></url>
                 <user></user>
                 <password></password>
+                <cleanup_enabled>0</cleanup_enabled>
+                <retention_days>180</retention_days>
+                <safe_to_delete_stores></safe_to_delete_stores>
             </general>
             <order>
                 <lifetime>365</lifetime>

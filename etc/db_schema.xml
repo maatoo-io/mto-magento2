@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
-    <table name="maatoo_sync" resource="default" engine="innodb"
-           comment="Maatoo Order synchronization">
+    <table name="maatoo_sync" resource="default" engine="innodb" comment="Maatoo Order synchronization">
         <column xsi:type="int" name="sync_id" padding="11" unsigned="true" nullable="false" identity="true"
                 comment="ID"/>
         <column xsi:type="int" name="entity_type" nullable="false" identity="false" default="0" comment="Entity Type"/>
@@ -17,6 +16,8 @@
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="sync_id"/>
         </constraint>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Creation Time"/>
         <index referenceId="SYNC_ENTITY_TYPE" indexType="btree">
             <column name="entity_type"/>
         </index>
