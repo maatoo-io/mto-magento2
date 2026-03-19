@@ -91,6 +91,21 @@ class Config
     const MAATOO_NEWSLETTER_CONFIRMATION_EMAIL = 'maatoo/newsletter/disable_newsletter_email';
 
     /**
+     * XML path of Sync Cleanup Enable
+     */
+    const MAATOO_CLEANUP_ENABLED = 'maatoo/general/cleanup_enabled';
+
+    /**
+     * XML path of Sync Retention Days
+     */
+    const MAATOO_RETENTION_DAYS = 'maatoo/general/retention_days';
+
+    /**
+     * XML path of Safe to Delete Stores
+     */
+    const MAATOO_SAFE_TO_DELETE_STORES = 'maatoo/general/safe_to_delete_stores';
+
+    /**
      * Config constructor
      *
      * @param ScopeConfigInterface $scopeConfig
@@ -116,10 +131,10 @@ class Config
         $url = $this->getMaatooUrl($websiteId);
 
         return $this->scopeConfig->isSetFlag(
-                self::MAATOO_MODULE_ENABLE,
-                ScopeInterface::SCOPE_WEBSITES,
-                $this->getScopeCode($websiteId)
-            ) && !empty($url);
+            self::MAATOO_MODULE_ENABLE,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        ) && !empty($url);
     }
 
     /**
@@ -307,5 +322,45 @@ class Config
 
             return null;
         }
+    }
+
+    /**
+     * Checks if sync table cleanup is enabled
+     */
+    public function isCleanupEnabled(?int $websiteId = null): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            self::MAATOO_CLEANUP_ENABLED,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
+    }
+
+    /**
+     * Returns retention period in days
+     */
+    public function getRetentionDays(?int $websiteId = null): int
+    {
+        $days = $this->scopeConfig->getValue(
+            self::MAATOO_RETENTION_DAYS,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
+
+        return $days !== null ? (int)$days : 180;
+    }
+
+    /**
+     * Returns list of safe to delete store IDs
+     */
+    public function getSafeToDeleteStores(?int $websiteId = null): array
+    {
+        $stores = $this->scopeConfig->getValue(
+            self::MAATOO_SAFE_TO_DELETE_STORES,
+            ScopeInterface::SCOPE_WEBSITES,
+            $this->getScopeCode($websiteId)
+        );
+
+        return $stores ? explode(',', $stores) : [];
     }
 }

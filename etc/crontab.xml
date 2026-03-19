@@ -22,5 +22,8 @@
         <job name="maatoo_cron_order_lines_all" instance="Maatoo\Maatoo\Cron\OrderLinesAll" method="execute">
             <config_path>maatoo/scheduling/all_order_lines_import_cron_schedule</config_path>
         </job>
+        <job name="maatoo_sync_cleanup" instance="Maatoo\Maatoo\Cron\CleanUpSyncTable" method="execute">
+            <schedule>0 3 * * *</schedule>
+        </job>
 	</group>
 </config>

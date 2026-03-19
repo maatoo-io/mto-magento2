@@ -40,6 +40,27 @@
                     <frontend_model>Maatoo\Maatoo\Block\Adminhtml\System\Config\Button</frontend_model>
                     <comment><![CDATA[Before press button "Test connection" you need enter other settings and keep them.]]></comment>
                 </field>
+                <field id="cleanup_enabled" translate="label comment" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enable Automatic Sync Cleanup</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>If enabled, a nightly cron job will remove old sync records and orphaned store data.</comment>
+                </field>
+                <field id="retention_days" translate="label comment" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Retention Period (Days)</label>
+                    <comment>Number of days to keep synchronization records. Default is 180.</comment>
+                    <validate>validate-number</validate>
+                    <depends>
+                        <field id="cleanup_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="safe_to_delete_stores" translate="label comment" type="multiselect" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Safe to Delete Stores (Permission List)</label>
+                    <source_model>Maatoo\Maatoo\Model\Source\AllStores</source_model>
+                    <comment>Admin's Permission list for data removal. Cleanup will only target stores selected here that are also NOT in the Currently Active list.</comment>
+                    <depends>
+                        <field id="cleanup_enabled">1</field>
+                    </depends>
+                </field>
             </group>
             <group id="order" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                 <label>Order Synchronization Settings</label>
