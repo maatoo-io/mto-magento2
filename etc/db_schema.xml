@@ -33,6 +33,16 @@
         <index referenceId="SYNC_ENTITY_STATUS" indexType="btree">
             <column name="status"/>
         </index>
+        <index referenceId="SYNC_CREATED_AT" indexType="btree">
+            <column name="created_at"/>
+        </index>
+
+        <index referenceId="SYNC_DUPLICATE_LOOKUP" indexType="btree">
+            <column name="entity_type"/>
+            <column name="entity_id"/>
+            <column name="store_id"/>
+            <column name="maatoo_id"/>
+        </index>
     </table>
 
     <table name="maatoo_store" resource="default" engine="innodb"
