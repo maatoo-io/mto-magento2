@@ -13,6 +13,8 @@ use Psr\Log\LoggerInterface;
  */
 class CleanUpSyncTableService
 {
+    const BATCH_SIZE = 1000;
+
     private $resource;
     private $config;
     private $storeManager;
@@ -40,7 +42,6 @@ class CleanUpSyncTableService
      * @param int|null $daysOverride
      *
      * @return array
-     * @throws \Zend_Db_Statement_Exception
      */
     public function execute(?int $daysOverride = null): array
     {
@@ -67,96 +68,194 @@ class CleanUpSyncTableService
         $connection = $this->resource->getConnection();
         $tableName = $this->resource->getTableName('maatoo_sync');
 
-        $duplicateSql = "DELETE ms1 FROM {$tableName} ms1
-            INNER JOIN {$tableName} ms2
-            WHERE ms1.sync_id > ms2.sync_id
-              AND ms1.entity_type = ms2.entity_type
-              AND ms1.entity_id = ms2.entity_id
-              AND ms1.store_id = ms2.store_id
-              AND ms1.maatoo_id = ms2.maatoo_id";
+        // ==========================================
+        // Step A: Duplicates Cleanup
+        // ==========================================
+        $stepStart = microtime(true);
 
-        $duplicateRows = $connection->query($duplicateSql)->rowCount();
-        $summary['duplicates'] = $duplicateRows;
+        $selectDuplicateIdsSql = "SELECT ms1.sync_id FROM {$tableName} ms1
+        INNER JOIN {$tableName} ms2 ON ms1.entity_type = ms2.entity_type
+          AND ms1.entity_id = ms2.entity_id
+          AND ms1.store_id = ms2.store_id
+          AND ms1.maatoo_id = ms2.maatoo_id
+        WHERE ms1.sync_id > ms2.sync_id
+        LIMIT " . self::BATCH_SIZE;
 
-        if ($duplicateRows > 0) {
-            $this->logger->info(sprintf('Maatoo Cleanup Step A: Removed %d duplicate records.', $duplicateRows));
-        }
+        do {
+            $duplicateIds = array_map('intval', $connection->fetchCol($selectDuplicateIdsSql));
 
-        $safeToDeleteIds = $this->config->getSafeToDeleteStores(0);
+            if (!empty($duplicateIds)) {
+                $affectedRows = $connection->delete($tableName, ['sync_id IN (?)' => $duplicateIds]);
+                $summary['duplicates'] += $affectedRows;
+                usleep(10000);
+            } else {
+                $affectedRows = 0;
+            }
+        } while ($affectedRows > 0);
 
-        $activeStoreIds = [];
+        $summary['duplicates_time'] = round(microtime(true) - $stepStart, 4);
+        $this->logger->info(sprintf(
+            'Maatoo Cleanup Step A (Duplicates): Removed %d records. Execution time: %f sec.',
+            $summary['duplicates'],
+            $summary['duplicates_time']
+        ));
 
-        foreach ($this->storeManager->getWebsites() as $website) {
-            $allowedStores = $this->config->getAllowedStores((int)$website->getId());
+        // ==========================================
+        // Step B: Orphans Cleanup
+        // ==========================================
+        $stepStart = microtime(true);
+        $safeToDeleteIds = array_map('intval', $this->config->getSafeToDeleteStores(0));
 
-            if ($allowedStores) {
-                $ids = explode(',', $allowedStores);
+        if (!empty($safeToDeleteIds)) {
+            $distinctStoreIdsSql = "SELECT DISTINCT store_id FROM {$tableName}";
+            $existingStoreIds = array_map('intval', $connection->fetchCol($distinctStoreIdsSql));
+            $storesToVerify = array_intersect($safeToDeleteIds, $existingStoreIds);
 
-                foreach ($ids as $id) {
-                    $activeStoreIds[] = (int)$id;
+            if (!empty($storesToVerify)) {
+                $activeStoreIds = [];
+                foreach ($this->storeManager->getWebsites() as $website) {
+                    $allowedStores = $this->config->getAllowedStores((int)$website->getId());
+                    if ($allowedStores) {
+                        $ids = explode(',', $allowedStores);
+                        foreach ($ids as $id) {
+                            $activeStoreIds[] = (int)$id;
+                        }
+                    }
+                }
+                $activeStoreIds = array_unique($activeStoreIds);
+                $finalDeleteList = array_values(array_diff($storesToVerify, $activeStoreIds));
+
+                if (!empty($finalDeleteList)) {
+                    // Using quoteInto to safely build the IN clause for the array
+                    $orphanWhereIn = $connection->quoteInto('store_id IN (?)', $finalDeleteList);
+                    $selectOrphanIdsSql = "SELECT sync_id FROM {$tableName}
+                        WHERE {$orphanWhereIn}
+                        LIMIT " . self::BATCH_SIZE;
+
+                    do {
+                        $orphanIds = array_map('intval', $connection->fetchCol($selectOrphanIdsSql));
+
+                        if (!empty($orphanIds)) {
+                            $affectedRows = $connection->delete($tableName, ['sync_id IN (?)' => $orphanIds]);
+                            $summary['orphans'] += $affectedRows;
+                            usleep(10000);
+                        } else {
+                            $affectedRows = 0;
+                        }
+                    } while ($affectedRows > 0);
                 }
             }
         }
 
-        $activeStoreIds = array_unique($activeStoreIds);
-        $finalDeleteList = array_diff($safeToDeleteIds, $activeStoreIds);
-
-        if (!empty($finalDeleteList)) {
-            $orphanRows = $connection->delete(
-                $tableName,
-                ['store_id IN (?)' => array_values($finalDeleteList)]
-            );
-
-            $summary['orphans'] = $orphanRows;
-
-            if ($orphanRows > 0) {
-                $this->logger->info(sprintf('Maatoo Cleanup Step B: Removed %d records for orphaned stores: %s', $orphanRows, implode(',', $finalDeleteList)));
-            }
-        }
+        $summary['orphans_time'] = round(microtime(true) - $stepStart, 4);
+        $this->logger->info(sprintf(
+            'Maatoo Cleanup Step B (Orphans): Removed %d records. Execution time: %f sec.',
+            $summary['orphans'],
+            $summary['orphans_time']
+        ));
 
         $days = $daysOverride ?? $this->config->getRetentionDays($websiteId);
 
-        $retentionSql = "DELETE FROM {$tableName} WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY) AND entity_type NOT IN (?, ?)";
-        $retentionRows = $connection->query($retentionSql, [
-            $days, SyncInterface::TYPE_CUSTOMER, SyncInterface::TYPE_PRODUCT,
-        ])->rowCount();
+        // ==========================================
+        // Step C: General Retention
+        // ==========================================
+        $stepStart = microtime(true);
 
-        $summary['retention'] = $retentionRows;
+        $selectRetentionIdsSql = "SELECT sync_id FROM {$tableName}
+            WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)
+              AND entity_type NOT IN (?, ?)
+            LIMIT " . self::BATCH_SIZE;
 
-        if ($retentionRows > 0) {
-            $this->logger->info(sprintf('Maatoo Cleanup Step C (General): Removed %d records older than %d days.', $retentionRows, $days));
-        }
+        do {
+            $retentionIds = array_map('intval', $connection->fetchCol($selectRetentionIdsSql, [
+                $days, SyncInterface::TYPE_CUSTOMER, SyncInterface::TYPE_PRODUCT,
+            ]));
 
+            if (!empty($retentionIds)) {
+                $affectedRows = $connection->delete($tableName, ['sync_id IN (?)' => $retentionIds]);
+                $summary['retention'] += $affectedRows;
+                usleep(10000);
+            } else {
+                $affectedRows = 0;
+            }
+        } while ($affectedRows > 0);
+
+        $summary['retention_time'] = round(microtime(true) - $stepStart, 4);
+        $this->logger->info(sprintf(
+            'Maatoo Cleanup Step C (General Retention): Removed %d records older than %d days. Execution time: %f sec.',
+            $summary['retention'],
+            $days,
+            $summary['retention_time']
+        ));
+
+        // ==========================================
+        // Step D: Product Safety Cleanup
+        // ==========================================
+        $stepStart = microtime(true);
         $productEntityIntTable = $this->resource->getTableName('catalog_product_entity_int');
         $eavAttributeTable = $this->resource->getTableName('eav_attribute');
-        $productSafetySql = "DELETE ms FROM {$tableName} ms
-            INNER JOIN {$productEntityIntTable} cpei ON ms.entity_id = cpei.entity_id
-            INNER JOIN {$eavAttributeTable} ea ON cpei.attribute_id = ea.attribute_id AND ea.attribute_code = 'status'
-            WHERE ms.entity_type = ?
-            AND ms.created_at < DATE_SUB(NOW(), INTERVAL ? DAY)
-            AND cpei.value = 2
-            AND cpei.store_id = 0";
 
-        $productRows = $connection->query($productSafetySql, [SyncInterface::TYPE_PRODUCT, $days])->rowCount();
-        $summary['products_cleaned'] = $productRows;
+        $selectProductIdsSql = "SELECT ms.sync_id FROM {$tableName} ms
+        INNER JOIN {$productEntityIntTable} cpei ON ms.entity_id = cpei.entity_id
+        INNER JOIN {$eavAttributeTable} ea ON cpei.attribute_id = ea.attribute_id AND ea.attribute_code = 'status'
+        WHERE ms.entity_type = ?
+          AND ms.created_at < DATE_SUB(NOW(), INTERVAL ? DAY)
+          AND cpei.value = 2
+          AND cpei.store_id = 0
+        LIMIT " . self::BATCH_SIZE;
 
-        if ($productRows > 0) {
-            $this->logger->info(sprintf('Maatoo Cleanup Step D (Products): Removed %d disabled product records older than %d days.', $productRows, $days));
-        }
+        do {
+            $productIds = array_map('intval', $connection->fetchCol($selectProductIdsSql, [SyncInterface::TYPE_PRODUCT, $days]));
 
+            if (!empty($productIds)) {
+                $affectedRows = $connection->delete($tableName, ['sync_id IN (?)' => $productIds]);
+                $summary['products_cleaned'] += $affectedRows;
+                usleep(10000);
+            } else {
+                $affectedRows = 0;
+            }
+        } while ($affectedRows > 0);
+
+        $summary['products_time'] = round(microtime(true) - $stepStart, 4);
+        $this->logger->info(sprintf(
+            'Maatoo Cleanup Step D (Products): Removed %d disabled product records older than %d days. Execution time: %f sec.',
+            $summary['products_cleaned'],
+            $days,
+            $summary['products_time']
+        ));
+
+        // ==========================================
+        // Step E: Customer Safety Cleanup
+        // ==========================================
+        $stepStart = microtime(true);
         $customerEntityTable = $this->resource->getTableName('customer_entity');
-        $customerSafetySql = "DELETE ms FROM {$tableName} ms
-            INNER JOIN {$customerEntityTable} ce ON ms.entity_id = ce.entity_id
-            WHERE ms.entity_type = ?
-            AND ms.created_at < DATE_SUB(NOW(), INTERVAL ? DAY)
-            AND ce.is_active = 0";
 
-        $customerRows = $connection->query($customerSafetySql, [SyncInterface::TYPE_CUSTOMER, $days])->rowCount();
-        $summary['customers_cleaned'] = $customerRows;
+        $selectCustomerIdsSql = "SELECT ms.sync_id FROM {$tableName} ms
+        INNER JOIN {$customerEntityTable} ce ON ms.entity_id = ce.entity_id
+        WHERE ms.entity_type = ?
+          AND ms.created_at < DATE_SUB(NOW(), INTERVAL ? DAY)
+          AND ce.is_active = 0
+        LIMIT " . self::BATCH_SIZE;
 
-        if ($customerRows > 0) {
-            $this->logger->info(sprintf('Maatoo Cleanup Step E (Customers): Removed %d inactive customer records older than %d days.', $customerRows, $days));
-        }
+        do {
+            $customerIds = array_map('intval', $connection->fetchCol($selectCustomerIdsSql, [SyncInterface::TYPE_CUSTOMER, $days]));
+
+            if (!empty($customerIds)) {
+                $affectedRows = $connection->delete($tableName, ['sync_id IN (?)' => $customerIds]);
+                $summary['customers_cleaned'] += $affectedRows;
+                usleep(10000);
+            } else {
+                $affectedRows = 0;
+            }
+        } while ($affectedRows > 0);
+
+        $summary['customers_time'] = round(microtime(true) - $stepStart, 4);
+        $this->logger->info(sprintf(
+            'Maatoo Cleanup Step E (Customers): Removed %d inactive customer records older than %d days. Execution time: %f sec.',
+            $summary['customers_cleaned'],
+            $days,
+            $summary['customers_time']
+        ));
 
         return $summary;
     }
