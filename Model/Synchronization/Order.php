@@ -224,13 +224,7 @@ class Order
                         $this->adapter->makeRequest('contacts/' . $leadId . '/edit', $data, 'PATCH');
                     }
 
-                    // Update sync table in store
-                    $param = [
-                        'entity_id' => $quote->getId(),
-                        'entity_type' => SyncInterface::TYPE_ORDER
-                    ];
-                    /** @var \Maatoo\Maatoo\Model\Sync $sync */
-                    $sync = $this->syncRepository->getByParam($param);
+                    // Update the exact store-scoped row used for this request.
                     $sync->setStatus(SyncInterface::STATUS_SYNCHRONIZED);
                     $sync->setMaatooId($result['order']['id']);
                     $sync->setEntityId($quote->getId());

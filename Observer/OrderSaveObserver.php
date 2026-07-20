@@ -53,28 +53,30 @@ class OrderSaveObserver implements ObserverInterface
         $order = $observer->getEvent()->getData('data_object');
 
         $entityId = (int)$order->getQuoteId();
-        /** @var \Magento\Store\Api\Data\StoreInterface $store */
-        foreach ($this->storeManager->getStores() as $store)
-        {
-            $statusSync = SyncInterface::STATUS_EMPTY;
+        $storeId = (int)$order->getStoreId();
 
-            /** @var \Maatoo\Maatoo\Model\Sync $sync */
-            $sync = $this->syncFactory->create();
-            $this->syncResource->loadByType($sync, $entityId, SyncInterface::TYPE_ORDER, $store->getId());
-
-            if ($sync->getSyncId()) {
-                if ($sync->getStatus() == SyncInterface::STATUS_SYNCHRONIZED) {
-                    $statusSync = SyncInterface::STATUS_UPDATED;
-                } else {
-                    $statusSync = $sync->getStatus();
-                }
-            }
-
-            $sync->setEntityId($entityId);
-            $sync->setEntityType(SyncInterface::TYPE_ORDER);
-            $sync->setStoreId($store->getId());
-            $sync->setStatus($statusSync);
-            $this->syncResource->save($sync);
+        if (!in_array($storeId, $this->storeManager->getStoreIds(), true)) {
+            return;
         }
+
+        $statusSync = SyncInterface::STATUS_EMPTY;
+
+        /** @var \Maatoo\Maatoo\Model\Sync $sync */
+        $sync = $this->syncFactory->create();
+        $this->syncResource->loadByType($sync, $entityId, SyncInterface::TYPE_ORDER, $storeId);
+
+        if ($sync->getSyncId()) {
+            if ($sync->getStatus() == SyncInterface::STATUS_SYNCHRONIZED) {
+                $statusSync = SyncInterface::STATUS_UPDATED;
+            } else {
+                $statusSync = $sync->getStatus();
+            }
+        }
+
+        $sync->setEntityId($entityId);
+        $sync->setEntityType(SyncInterface::TYPE_ORDER);
+        $sync->setStoreId($storeId);
+        $sync->setStatus($statusSync);
+        $this->syncResource->save($sync);
     }
 }

@@ -102,7 +102,6 @@ class OrderAll
             $select = $collection->getSelect();
             $select->limit(1000);
 
-            $maatoSyncInsertData = [];
             $updateOrdersData = [];
 
             foreach ($collection->getItems() as $order) {
@@ -138,13 +137,12 @@ class OrderAll
                 }
 
                 if (isset($result['order']['id'])) {
-                    $maatoSyncInsertData[] = [
-                        'status' => SyncInterface::STATUS_SYNCHRONIZED,
-                        "maatoo_id" => $result['order']['id'],
-                        "entity_id" => $quoteId,
-                        "entity_type" => SyncInterface::TYPE_ORDER,
-                        "store_id" => $order->getStoreId(),
-                    ];
+                    $sync->setStatus(SyncInterface::STATUS_SYNCHRONIZED);
+                    $sync->setMaatooId($result['order']['id']);
+                    $sync->setEntityId($quoteId);
+                    $sync->setEntityType(SyncInterface::TYPE_ORDER);
+                    $sync->setStoreId($order->getStoreId());
+                    $this->syncRepository->save($sync);
 
                     $updateOrdersData[$order->getId()] = SyncInterface::ORDER_STATUS_SYNCHRONIZED;
                 }
@@ -154,7 +152,6 @@ class OrderAll
                 }
             }
             $this->helper->executeUpdateSalesOrderTable($updateOrdersData);
-            $this->helper->executeInsertOnDuplicate($maatoSyncInsertData);
         }
         $this->logger->info("Finished syncing all orders to maatoo.");
     }

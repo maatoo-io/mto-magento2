@@ -8,7 +8,6 @@ use Maatoo\Maatoo\Helper\LocaleHelper;
 use Maatoo\Maatoo\Model\Config\Config;
 use Maatoo\Maatoo\Model\ConversionFactory;
 use Maatoo\Maatoo\Model\ResourceModel\Conversion;
-use Maatoo\Maatoo\Model\Sync;
 use Maatoo\Maatoo\Model\Synchronization\Order;
 use Maatoo\Maatoo\Model\SyncRepository;
 use Maatoo\Maatoo\Model\StoreConfigManager;
@@ -203,13 +202,7 @@ class SyncOrdersAfterPlace
                 $this->adapter->makeRequest('contacts/' . $leadId . '/edit', $data, 'PATCH');
             }
 
-            // Update sync table in store
-            $param = [
-                'entity_id' => $quote->getId(),
-                'entity_type' => SyncInterface::TYPE_ORDER
-            ];
-            /** @var Sync $sync */
-            $sync = $this->syncRepository->getByParam($param);
+            // Update the exact store-scoped row used for this request.
             $sync->setStatus(SyncInterface::STATUS_SYNCHRONIZED);
             $sync->setMaatooId($result['order']['id']);
             $sync->setEntityId($quote->getId());

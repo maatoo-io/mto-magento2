@@ -163,12 +163,16 @@ class CleanUpSyncTableService
 
         $selectRetentionIdsSql = "SELECT sync_id FROM {$tableName}
             WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)
-              AND entity_type NOT IN (?, ?)
+              AND entity_type NOT IN (?, ?, ?, ?)
             LIMIT " . self::BATCH_SIZE;
 
         do {
             $retentionIds = array_map('intval', $connection->fetchCol($selectRetentionIdsSql, [
-                $days, SyncInterface::TYPE_CUSTOMER, SyncInterface::TYPE_PRODUCT,
+                $days,
+                SyncInterface::TYPE_CUSTOMER,
+                SyncInterface::TYPE_PRODUCT,
+                SyncInterface::TYPE_ORDER,
+                SyncInterface::TYPE_ORDER_LINES,
             ]));
 
             if (!empty($retentionIds)) {
